@@ -12,6 +12,7 @@ import com.lakemonsters2635.actuator.modules.DriveTank;
 import com.lakemonsters2635.sensor.modules.SensorRawButton;
 
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -65,11 +66,20 @@ public class Robot extends IterativeRobot
     	rearLeft = new CANTalon(REAR_LEFT_CHANNEL);
     	frontLeft = new CANTalon(FRONT_LEFT_CHANNEL);
     	
+    	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
+    	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
+    	
+    	
     	robotDrive = new RobotDrive(frontLeft, rearLeft, frontRight, rearRight);
       	driveMethod = new DriveArcade(robotDrive);//new PIDDrive(new DriveTank(robotDrive), , new SensorRawButton(FIRE_BUTTON, rightJoystick), pid)
       	navx = new AHRS(SerialPort.Port.kMXP);
-      	testUnwrapper = new AngleUnwrapper(360.0, new SensorNavxAngle(navx));
+      	
+      	testUnwrapper = new AngleUnwrapper(180.0, new SensorNavxAngle(navx));
+      	CameraServer.getInstance().setQuality(30);
+      	CameraServer.getInstance().startAutomaticCapture("cam0");
+    	
     }
+    
     
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
@@ -97,7 +107,7 @@ public class Robot extends IterativeRobot
     public void teleopPeriodic() 
     {
         double X = -rightJoystick.getRawAxis(0);
-        double Y = rightJoystick.getRawAxis(1);
+        double Y = -rightJoystick.getRawAxis(1);
         
         driveMethod.drive(X, Y);
         SmartDashboard.putNumber("Raw angle", navx.getAngle());
