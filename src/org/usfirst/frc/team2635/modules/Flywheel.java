@@ -1,10 +1,10 @@
 package org.usfirst.frc.team2635.modules;
 
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.lakemonsters2635.composites.BaseLauncher;
-import com.lakemonsters2635.sensor.interfaces.ISensor;
+import com.lakemonsters2635.sensor.interfaces.BaseSensor;
 
-public class Flywheel {
+public class Flywheel
+{
 
 	BaseActuator<Double> leftWheel;
 	BaseActuator<Double> rightWheel;
@@ -14,7 +14,7 @@ public class Flywheel {
 	BaseActuator<Double> frontLoader;
 	BaseActuator<Double> backLoader;
 	
-	ISensor<Boolean> canFireSensor;
+	BaseSensor<Boolean> canFireSensor;
 	public void fire(double magnitude, double feedMagnitude) {
 		leftWheel.actuate(magnitude);
 		rightWheel.actuate(magnitude);

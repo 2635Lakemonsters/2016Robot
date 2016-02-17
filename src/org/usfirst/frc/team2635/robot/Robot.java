@@ -10,6 +10,7 @@ import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 import com.lakemonsters2635.actuator.modules.DriveArcade;
 import com.lakemonsters2635.actuator.modules.DriveTank;
 import com.lakemonsters2635.sensor.modules.SensorRawButton;
+import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -52,7 +53,7 @@ public class Robot extends IterativeRobot
 	Joystick leftJoystick;
 	
 	AHRS navx;
-	AngleUnwrapper testUnwrapper;
+	SensorUnwrapper testUnwrapper;
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -68,7 +69,7 @@ public class Robot extends IterativeRobot
     	robotDrive = new RobotDrive(frontLeft, rearLeft, frontRight, rearRight);
       	driveMethod = new DriveArcade(robotDrive);//new PIDDrive(new DriveTank(robotDrive), , new SensorRawButton(FIRE_BUTTON, rightJoystick), pid)
       	navx = new AHRS(SerialPort.Port.kMXP);
-      	testUnwrapper = new AngleUnwrapper(360.0, new SensorNavxAngle(navx));
+      	testUnwrapper = new SensorUnwrapper(360.0, new SensorNavxAngle(navx));
     }
     
 	/**
@@ -101,7 +102,7 @@ public class Robot extends IterativeRobot
         
         driveMethod.drive(X, Y);
         SmartDashboard.putNumber("Raw angle", navx.getAngle());
-        SmartDashboard.putNumber("Unwrapped angle", testUnwrapper.sense());
+        SmartDashboard.putNumber("Unwrapped angle", testUnwrapper.sense(null));
     }
     
     /**
