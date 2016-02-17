@@ -34,7 +34,7 @@ public class SensorNavxAngle extends BaseSensor<Double>
 	public double pidGet()
 	{
 		// TODO Auto-generated method stub
-		return 0;
+		return sense(null);
 	}
 
 }

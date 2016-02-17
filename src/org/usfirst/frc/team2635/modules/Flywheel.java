@@ -13,12 +13,16 @@ public class Flywheel
 	
 	BaseActuator<Double> frontLoader;
 	BaseActuator<Double> backLoader;
-	
 	BaseSensor<Boolean> canFireSensor;
-	public void fire(double magnitude, double feedMagnitude) {
-		leftWheel.actuate(magnitude);
-		rightWheel.actuate(magnitude);
-		if(canFireSensor.sense())
+	
+	BaseActuator<Double> elevator;
+	BaseActuator<Double> tilter;
+	public void fire(double wheelMagnitude, double elevateMagnitude, double tiltMagnitude, double feedMagnitude) {
+		tilter.actuate(tiltMagnitude);
+		elevator.actuate(elevateMagnitude);
+		leftWheel.actuate(wheelMagnitude);
+		rightWheel.actuate(wheelMagnitude);
+		if(canFireSensor.sense(null))
 		{
 			launcherFeed.actuate(feedMagnitude);
 		}
