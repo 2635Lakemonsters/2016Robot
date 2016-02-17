@@ -22,9 +22,9 @@ public class PIDDrive extends BaseDrive
 	@Override
 	public boolean drive(double X, double Y) 
 	{
-		if(enablePIDChecker.sense())
+		if(enablePIDChecker.sense(null))
 		{
-			pid.setSetpoint(setPointGetter.sense());
+			pid.setSetpoint(setPointGetter.sense(null));
 			pid.enable();
 		}
 		else	
@@ -37,9 +37,9 @@ public class PIDDrive extends BaseDrive
 	@Override
 	public boolean drive(double X, double Y, double rotation) 
 	{
-		if(enablePIDChecker.sense())
+		if(enablePIDChecker.sense(null))
 		{
-			pid.setSetpoint(setPointGetter.sense());
+			pid.setSetpoint(setPointGetter.sense(null));
 			pid.enable();
 		}
 		else	
