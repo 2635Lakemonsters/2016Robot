@@ -4,6 +4,11 @@ import com.lakemonsters2635.actuator.interfaces.BaseActuator;
 
 import edu.wpi.first.wpilibj.SpeedController;
 
+/**
+ * Drive the left motor one way and the right motor the other way
+ * @author LakeM
+ *
+ */
 public class ActuatorTwoMotorInverse extends BaseActuator<Double>
 {
 	SpeedController leftMotor;

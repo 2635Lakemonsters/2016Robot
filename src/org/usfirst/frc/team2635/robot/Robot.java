@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -137,9 +138,14 @@ public class Robot extends IterativeRobot
 		final double CLIMBER_I_DEFAULT = 0.0;
 		final double CLIMBER_D_DEFAULT = 0.0;
 
-		//TODO: find maximum height of climber, make fractions of that height as setpoints
+		//TODO: find maximum height of climber, make fractions of that height as climber positions
 		int climberIndex = 0;
-		final double[] CLIMBER_POSITIONS = {0};
+		
+		final double CLIMBER_MAX_HEIGHT = 0.0;
+		
+		//TODO: figure out what fractions of CLIMBER_MAX_HEGIHT are a good idea
+		final double[] CLIMBER_POSITIONS = {0.0, CLIMBER_MAX_HEIGHT / 2, CLIMBER_MAX_HEIGHT};
+		
 		//Left hand joystick
 		final int CLIMB_UP_BUTTON = 3;
 		final int CLIMB_DOWN_BUTTON = 2;
@@ -197,9 +203,9 @@ public class Robot extends IterativeRobot
     {
     	//SMART DASHBOARD INIT
     		//PIDPIDPIDPIDPIDPIDPID
-	    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
-	    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
-	    	SmartDashboard.putNumber(DRIVE_KEY_D, DRIVE_D_DEFAULT);
+//	    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
+//	    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
+//	    	SmartDashboard.putNumber(DRIVE_KEY_D, DRIVE_D_DEFAULT);
 	    	
 	    	SmartDashboard.putNumber(CAMERA_X_KEY_P, CAMERA_X_P_DEFAULT);
 	    	SmartDashboard.putNumber(CAMERA_X_KEY_I, CAMERA_X_I_DEFAULT);
@@ -218,8 +224,10 @@ public class Robot extends IterativeRobot
 	    	SmartDashboard.putNumber(ELEVATOR_KEY_D, ELEVATOR_D_DEFAULT);
 
 	    //END SMART DASHBOARD INIT
-	    	
+	    //TODO: if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
+
 	    //DRIVE INIT
+	    	//TODO: might have to invert the output for some of these. There is a function to do that in CANTalon
 	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
 	    	//rearRightMotor.changeControlMode(TalonControlMode.Follower);
 	    	//rearRightMotor.set(FRONT_RIGHT_CHANNEL);
@@ -270,13 +278,24 @@ public class Robot extends IterativeRobot
 	    			new ActuatorSimple(feedMotor), 
 	    			new ActuatorTwoMotorInverse(leftFlywheelMotor, rightFlywheelMotor), 
 	    			new ActuatorSimple(feedMotor),
-	    			new SensorRawButton(FEED_FORWARD_BUTTON, rightJoystick), //TODO: Figure out if there are encoders to read or not
+	    			new SensorRawButton(FEED_FORWARD_BUTTON, rightJoystick), /**
+	    			TODO: Figure out if there are encoders to read to determine whether to feed or not
+	    			If there are you can make a class that implements BaseSensor that returns the speed of the flywheels and 
+	    			then containing that class in a SensorHitTest, like so:
+	    			new SensorHitTest(new SensorCANTalonSpeed(...))
+	    			SensorHitTest hasn't been tested yet so if there are issues check that it is working like intended.
+	    			If you are able to debug it you will have to make the change in the LakeLib project,
+	    			export it to the LakeLib jar, and then restart eclipse so intellisense can catch up.
+	    			 
+	    	
+	    			**/
 	    			new ActuatorSimple(elevatorMotor),
 	    			new ActuatorSimple(tiltMotor));
 	    //END SHOOTER INIT
 	    	
 	    
 	    //CLIMBER INIT
+	    	//TODO: Might have to invert the sensor or output of one of these. There are member functions for both in CANTalon
 	    	rightClimberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
 	    	rightClimberMotor.changeControlMode(TalonControlMode.Position);
 	    	rightClimberMotor.setPID(CLIMBER_P_DEFAULT, CLIMBER_I_DEFAULT, CLIMBER_D_DEFAULT);
@@ -297,7 +316,10 @@ public class Robot extends IterativeRobot
 	        int session = NIVision.IMAQdxOpenCamera("cam0",
 	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
 	      	camera = new ImageGrabber(session, true);
+	      	
+	      	//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
 	      	angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
+	      	
 	      	cameraXPID = new PIDController(CAMERA_X_P_DEFAULT, CAMERA_X_I_DEFAULT, CAMERA_X_D_DEFAULT, angleUnwrapper, new PIDOutputThreeMotorRotate(robotDrive));
       	//END CAMERA INIT
     }
@@ -331,6 +353,12 @@ public class Robot extends IterativeRobot
     {
     	//frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
     	//frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+		tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
+		cameraXPID.setPID(SmartDashboard.getNumber(CAMERA_X_KEY_P), SmartDashboard.getNumber(CAMERA_X_KEY_I), SmartDashboard.getNumber(CAMERA_X_KEY_D));
+		elevatorMotor.setPID(SmartDashboard.getNumber(ELEVATOR_KEY_P), SmartDashboard.getNumber(ELEVATOR_KEY_I), SmartDashboard.getNumber(ELEVATOR_KEY_D));
+		leftClimberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
+		rightClimberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
+	    
     }
     public void teleopPeriodic() 
     {
@@ -348,14 +376,16 @@ public class Robot extends IterativeRobot
         //TELEOP SHOOTER AND CAMERA AND DRIVE
         	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
         	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
-        	//TODO: change this when you figure out y axis camera shenannigans
+        	//TODO: Tilt angle is currently set to just always be manually set. Change this to 0.0 when Y axis PID is figured out
         	double tiltAngle = rightJoystick.getRawAxis(TILT_AXIS) * TILT_SCALER;
         	if(findTargetAngle)
         	{
+        		//May want to wrap this logic into a couple of modules and put them in the PIDDrive class, but not necessary for right now
         		if(!cameraXPID.isEnabled())
         		{
         			
         			NIVision.PointDouble angleToTarget = angleToTargetGrabber.sense(camera.getImage());
+        			
         			SmartDashboard.putNumber("Angle to target X", angleToTarget.x);
         			SmartDashboard.putNumber("Angle to target Y", angleToTarget.y);
         			tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
@@ -364,6 +394,7 @@ public class Robot extends IterativeRobot
         			//PID will drive for us
         			cameraXPID.enable();
         			//TODO: need to set tilt to some distance that is probably the ratio between the angle to the target and the veiw angle, multiplied by the maximum tilt distance
+        		
         		}	
         		
 	        	
@@ -377,9 +408,11 @@ public class Robot extends IterativeRobot
         		}
         		tiltAngle = rightJoystick.getRawAxis(TILT_AXIS) * TILT_SCALER; 
         		//Drive normally 
-            	double RY = -rightJoystick.getRawAxis(RIGHT_Y_AXIS);
-            	double LY = -leftJoystick.getRawAxis(LEFT_Y_AXIS);
+            	//Depending on how the robot is wired, the axes values may have to be inverted
+        		//If the joysticks are swapped, swap the order of the argumens in robotDrive.drive . We want to keep the right joystick on the right hand side
 
+            	double RY = rightJoystick.getRawAxis(RIGHT_Y_AXIS);
+            	double LY = leftJoystick.getRawAxis(LEFT_Y_AXIS);
             	robotDrive.drive(LY, RY);
 
         	}
@@ -389,9 +422,11 @@ public class Robot extends IterativeRobot
         		flywheel.fire(FIRE_SPEED, ELEVATION_DISTANCE, tiltAngle, FEED_SPEED);
         	}
         //END TELEOP SHOOTER AND CAMERA AND DRIVE
+        
         //TELEOP CLIMBER
-        	
-        	if(climbUp && climberIndex < CLIMBER_POSITIONS.length)
+        	//TODO:The climber wont go anywhere until the max height of the climber is filled in in the constants section
+        
+        	if(climbUp && climberIndex < CLIMBER_POSITIONS.length - 1)
         	{
         		climberIndex++;
         	}
@@ -409,7 +444,9 @@ public class Robot extends IterativeRobot
      */
     public void testPeriodic() 
     {
-    
+    	//Add motors and sensors using the LiveWindow class to test them. ex:
+    	//LiveWindow.addActuator("Rear right motor", REAR_RIGHT_CHANNEL, rearRightMotor);
+    	//I've never actually tried using the LiveWindow so some fiddling may be required
     }
     
 }

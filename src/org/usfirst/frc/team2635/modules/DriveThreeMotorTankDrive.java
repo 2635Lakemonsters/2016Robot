@@ -2,6 +2,11 @@ package org.usfirst.frc.team2635.modules;
 
 import edu.wpi.first.wpilibj.SpeedController;
 
+/**
+ * Drive in a tank drive configuration
+ * @author LakeM
+ *
+ */
 public class DriveThreeMotorTankDrive extends DriveThreeMotor
 {
 

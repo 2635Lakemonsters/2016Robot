@@ -4,6 +4,11 @@ import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 
 import edu.wpi.first.wpilibj.SpeedController;
 
+/**
+ * Class for driving a chassis with three motors on each side. 
+ * @author LakeM
+ *
+ */
 public abstract class DriveThreeMotor extends BaseDrive
 {
 	SpeedController rearRightMotor;
