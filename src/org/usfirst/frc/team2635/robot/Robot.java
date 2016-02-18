@@ -1,14 +1,22 @@
 
 package org.usfirst.frc.team2635.robot;
 
+import org.usfirst.frc.team2635.modules.ActuatorTwoMotorInverse;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
+import org.usfirst.frc.team2635.modules.Flywheel;
+import org.usfirst.frc.team2635.modules.PIDOutputThreeMotorRotate;
 import org.usfirst.frc.team2635.modules.SensorNavxAngle;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.lakemonsters2635.actuator.interfaces.BaseActuator;
 import com.lakemonsters2635.actuator.interfaces.BaseDrive;
+import com.lakemonsters2635.actuator.modules.ActuatorSimple;
 import com.lakemonsters2635.actuator.modules.DriveArcade;
 import com.lakemonsters2635.sensor.interfaces.BaseSensor;
+import com.lakemonsters2635.sensor.modules.SensorDummy;
+import com.lakemonsters2635.sensor.modules.SensorRawButton;
+import com.lakemonsters2635.sensor.modules.SensorRawJoystickAxis;
 import com.lakemonsters2635.sensor.modules.SensorTargetAngleFromImage;
 import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
 import com.lakemonsters2635.util.ImageGrabber;
@@ -17,6 +25,7 @@ import com.ni.vision.NIVision;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
@@ -31,110 +40,197 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot 
 {
-	final int REAR_RIGHT_CHANNEL = 0;
-	final int MID_RIGHT_CHANNEL = 1;
-	final int FRONT_RIGHT_CHANNEL = 2;
+//CONSTANTS
+	//DRIVE CONSTANTS
+		final int REAR_RIGHT_CHANNEL = -1;
+		final int MID_RIGHT_CHANNEL = -1;
+		final int FRONT_RIGHT_CHANNEL = -1;
+		
+		final int REAR_LEFT_CHANNEL = -1;
+		final int MID_LEFT_CHANNEL = -1;
+		final int FRONT_LEFT_CHANNEL = -1;
+		
+		final int JOYSTICK_LEFT_CHANNEL = 1;
+		final int JOYSTICK_RIGHT_CHANNEL = 0;
+		
+		final int RIGHT_Y_AXIS = 1;
+		final int LEFT_Y_AXIS = 1;
+		
+		final String DRIVE_KEY_P = "Drive P";
+		final String DRIVE_KEY_I = "Drive I";
+		final String DRIVE_KEY_D = "Drive D";
+		
+		final double DRIVE_P_DEFAULT = 0.0;
+		final double DRIVE_I_DEFAULT = 0.0;
+		final double DRIVE_D_DEFAULT = 0.0;
+		
+		double speedModeScaler = 1000.0;
+	//END DRIVE CONSTANTS
 	
-	final int REAR_LEFT_CHANNEL = 3;
-	final int MID_LEFT_CHANNEL = 4;
-	final int FRONT_LEFT_CHANNEL = 5;
+	//CAMERA CONSTANTS
+		final String CAMERA_KEY_P = "Camera P";
+		final String CAMERA_KEY_I = "Camera I";
+		final String CAMERA_KEY_D = "Camera D";
 	
-	final int JOYSTICK_LEFT_CHANNEL = 1;
-	final int JOYSTICK_RIGHT_CHANNEL = 0;
+		double CAMERA_P_DEFAULT = 0.02;
+		double CAMERA_I_DEFAULT = 0.0006;
+		double CAMERA_D_DEFAULT = 0.0;
+			
+		final double CAMERA_RESOLUTION_X = 680.0;
+		final double CAMERA_RESOLUTION_Y = 460.0;
+		final double CAMERA_VIEW_ANGLE = 64.0;
+		final double TARGET_ASPECT_RATIO = 14.0/20.0;
+		final NIVision.Range TARGET_HUE_RANGE = new NIVision.Range(0, 130);
+		final NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
+		final NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
+		final double PARTICLE_AREA_MINIMUM = 0.5;
+	//END CAMERA CONSTANTS
 	
-	final int RIGHT_Y_AXIS = 1;
-	final int LEFT_Y_AXIS = 1;
+	//SHOOTER CONSTANTS
+		final int RIGHT_FLYWHEEL_CHANNEL = -1;
+		final int LEFT_FLYWHEEL_CHANNEL = -1;
+		
+		//Right hand joystick
+		final int AIM_BUTTON = 3;
+		final int FIRE_BUTTON = 1;
+		
 	
-	//Right hand joystick
-	final int AIM_BUTTON = 3;
-	final int FIRE_BUTTON = 1;
+	//END SHOOTER CONSTANTS
 	
-	//Left hand joystick
-	final int CLIMB_UP_BUTTON = 3;
-	final int CLIMB_DOWN_BUTTON = 2;
-	
+	//CLIMBER CONSTANTS
+		final int LEFT_CLIMBER_CHANNEL = -1;
+		final int RIGHT_CLIMBER_CHANNEL = -1;
+		
+		//Left hand joystick
+		final int CLIMB_UP_BUTTON = 3;
+		final int CLIMB_DOWN_BUTTON = 2;
+	//END CLIMBER CONSTANTS
+//END CONSTANTS
 
-	final String DRIVE_KEY_P = "Drive P";
-	final String DRIVE_KEY_I = "Drive I";
-	final String DRIVE_KEY_D = "Drive D";
-	
-	double P_DEFAULT = 0.0;
-	double I_DEFAULT = 0.0;
-	double D_DEFAULT = 0.0;
-	
-	CANTalon rearRightMotor;
-	CANTalon midRightMotor;
-	CANTalon frontRightMotor;
-	
-	CANTalon rearLeftMotor;
-	CANTalon midLeftMotor;
-	CANTalon frontLeftMotor;
+//VARIABLES
+	//DRIVE VARIABLES
+		CANTalon rearRightMotor;
+		CANTalon midRightMotor;
+		CANTalon frontRightMotor;
+		
+		CANTalon rearLeftMotor;
+		CANTalon midLeftMotor;
+		CANTalon frontLeftMotor;
+		
+		DriveThreeMotor robotDrive;
+		
+		Joystick rightJoystick; //Shooter controls
+		Joystick leftJoystick; //Climber controls
 
-	DriveThreeMotor robotDrive;
-	
-	Joystick rightJoystick;
-	Joystick leftJoystick;
-	double scaler = 1000.0;
+	//END DRIVE VARIABLES
 
+	//CLIMBER VARIABLES
+		CANTalon rightClimberMotor;
+		CANTalon leftClimberMotor;
+		BaseActuator<Double> climber;
+	//END CLIMBER VARIABLES
 	
-	AHRS navx;
-	SensorUnwrapper testUnwrapper;
-	ImageGrabber camera;
-	BaseSensor<NIVision.PointDouble> angleToTargetGrabber;
-	final double CAMERA_RESOLUTION_X = 680.0;
-	final double CAMERA_RESOLUTION_Y = 460.0;
-	final double CAMERA_VIEW_ANGLE = 64.0;
-	final double TARGET_ASPECT_RATIO = 14.0/20.0;
-	final NIVision.Range TARGET_HUE_RANGE = new NIVision.Range(0, 130);
-	final NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
-	final NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
-	final double PARTICLE_AREA_MINIMUM = 0.5;
+	//SHOOTER VARIABLES
+		Flywheel flywheel;
+		CANTalon rightFlywheelMotor;
+		CANTalon leftFlywheelMotor;
+		CANTalon feedMotor;
+		CANTalon elevatorMotor;
+		CANTalon tiltMotor;
+		
+	//END SHOOTER VARIABLES
+	
+	//CAMERA VARIABLES
+		AHRS navx;
+		BaseSensor<NIVision.PointDouble> angleToTargetGrabber;
+		SensorUnwrapper testUnwrapper;
+		ImageGrabber camera;
+		PIDController cameraPID;
+	//END CAMERA VARIABLES
+		
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() 
     {
-    	SmartDashboard.putNumber(DRIVE_KEY_P, P_DEFAULT);
-    	SmartDashboard.putNumber(DRIVE_KEY_I, I_DEFAULT);
-    	SmartDashboard.putNumber(DRIVE_KEY_D, D_DEFAULT);
-    	
-    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
-    	rearRightMotor.changeControlMode(TalonControlMode.Follower);
-    	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
-    	
-    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
-    	midRightMotor.changeControlMode(TalonControlMode.Follower);
-    	midRightMotor.set(FRONT_RIGHT_CHANNEL);
-    	
-    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
-    	frontRightMotor.changeControlMode(TalonControlMode.Speed);
-    	frontRightMotor.setPID(P_DEFAULT, I_DEFAULT, D_DEFAULT);
-    	
-    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
-    	rearLeftMotor.changeControlMode(TalonControlMode.Follower);
-    	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
-    	
-    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
-    	midLeftMotor.changeControlMode(TalonControlMode.Follower);
-    	midLeftMotor.set(FRONT_LEFT_CHANNEL);
-    	
-		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
-    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
-    	frontLeftMotor.setPID(P_DEFAULT, I_DEFAULT, D_DEFAULT);
-    	
-    	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
-    	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
-        	
-    	robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
-      	
-    	navx = new AHRS(SerialPort.Port.kMXP);
-      	testUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
-      	
-        int session = NIVision.IMAQdxOpenCamera("cam0",
-                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-      	camera = new ImageGrabber(session, true);
-      	angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
+    	//SMART DASHBOARD INIT
+	    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
+	    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
+	    	SmartDashboard.putNumber(DRIVE_KEY_D, DRIVE_D_DEFAULT);
+	    	
+	    	SmartDashboard.putNumber(CAMERA_KEY_P, CAMERA_P_DEFAULT);
+	    	SmartDashboard.putNumber(CAMERA_KEY_I, CAMERA_I_DEFAULT);
+	    	SmartDashboard.putNumber(CAMERA_KEY_D, CAMERA_D_DEFAULT);
+	    //END SMART DASHBOARD INIT
+	    	
+	    //DRIVE INIT
+	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
+	    	//rearRightMotor.changeControlMode(TalonControlMode.Follower);
+	    	//rearRightMotor.set(FRONT_RIGHT_CHANNEL);
+	    	
+	    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+	    	//midRightMotor.changeControlMode(TalonControlMode.Follower);
+	    	//midRightMotor.set(FRONT_RIGHT_CHANNEL);
+	    	
+	    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+	    	//frontRightMotor.changeControlMode(TalonControlMode.Speed);
+	    	//frontRightMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+	    	
+	    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+	    	//rearLeftMotor.changeControlMode(TalonControlMode.Follower);
+	    	//rearLeftMotor.set(FRONT_LEFT_CHANNEL);
+	    	
+	    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
+	    	//midLeftMotor.changeControlMode(TalonControlMode.Follower);
+	    	//midLeftMotor.set(FRONT_LEFT_CHANNEL);
+	    	
+			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
+	    	//frontLeftMotor.changeControlMode(TalonControlMode.Speed);
+	    	//frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
+	      	
+	    	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
+	    	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
+	    //END DRIVE INIT
+	    	
+    	//SHOOTER INIT
+	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+	    	//rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+	    	
+	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+	    	//leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+	    	
+	    	flywheel = new Flywheel(
+	    			new ActuatorTwoMotorInverse(leftFlywheelMotor, rightFlywheelMotor), 
+	    			new ActuatorSimple(feedMotor), 
+	    			new ActuatorTwoMotorInverse(leftFlywheelMotor, rightFlywheelMotor), 
+	    			new ActuatorSimple(feedMotor),
+	    			new SensorRawButton(button, rightJoystick), //TODO: Figure out if there are encoders to read or not
+	    			new ActuatorSimple(elevatorMotor),
+	    			new ActuatorSimple(tiltMotor));
+	    //END SHOOTER INIT
+	    	
+	    
+	    //CLIMBER INIT
+	    	rightClimberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
+	    	rightClimberMotor.changeControlMode(TalonControlMode.Position);
+	    	
+	    	leftClimberMotor = new CANTalon(LEFT_CLIMBER_CHANNEL);
+	    	leftClimberMotor.changeControlMode(TalonControlMode.Position);
+	    	
+	    	climber = new ActuatorTwoMotorInverse(leftClimberMotor, rightClimberMotor);
+	    //END CLIMBER INIT
+	    
+	    //CAMERA INIT
+	    	navx = new AHRS(SerialPort.Port.kMXP);
+	      	testUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
+	        int session = NIVision.IMAQdxOpenCamera("cam0",
+	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+	      	camera = new ImageGrabber(session, true);
+	      	angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
+	      	cameraPID = new PIDController(CAMERA_P_DEFAULT, CAMERA_I_DEFAULT, CAMERA_D_DEFAULT, testUnwrapper, new PIDOutputThreeMotorRotate(robotDrive));
+      	//END CAMERA INIT
     }
     
     
@@ -164,16 +260,18 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    	frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
-    	frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+    	//frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+    	//frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
     }
     public void teleopPeriodic() 
     {
-    	
-        double X = -rightJoystick.getRawAxis(0);
-        double Y = -rightJoystick.getRawAxis(1);
-        
+    	//TELEOP DRIVE
+        	double X = -rightJoystick.getRawAxis(0);
+        	double Y = -rightJoystick.getRawAxis(1);
+        //END TELEOP DRIVE
+        //TELEOP
         robotDrive.drive(X, Y);
+
     }
     
     /**

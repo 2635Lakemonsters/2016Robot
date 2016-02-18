@@ -6,8 +6,7 @@ import com.lakemonsters2635.sensor.interfaces.BaseSensor;
 public class Flywheel
 {
 
-	BaseActuator<Double> leftWheel;
-	BaseActuator<Double> rightWheel;
+	BaseActuator<Double> wheel;
 	
 	BaseActuator<Double> launcherFeed;
 	
@@ -17,11 +16,23 @@ public class Flywheel
 	
 	BaseActuator<Double> elevator;
 	BaseActuator<Double> tilter;
+	public Flywheel(BaseActuator<Double> wheel, BaseActuator<Double> launcherFeed, BaseActuator<Double> frontLoader,
+			BaseActuator<Double> backLoader, BaseSensor<Boolean> canFireSensor, BaseActuator<Double> elevator,
+			BaseActuator<Double> tilter)
+	{
+		super();
+		this.wheel = wheel;
+		this.launcherFeed = launcherFeed;
+		this.frontLoader = frontLoader;
+		this.backLoader = backLoader;
+		this.canFireSensor = canFireSensor;
+		this.elevator = elevator;
+		this.tilter = tilter;
+	}
 	public void fire(double wheelMagnitude, double elevateMagnitude, double tiltMagnitude, double feedMagnitude) {
 		tilter.actuate(tiltMagnitude);
 		elevator.actuate(elevateMagnitude);
-		leftWheel.actuate(wheelMagnitude);
-		rightWheel.actuate(wheelMagnitude);
+		wheel.actuate(wheelMagnitude);
 		if(canFireSensor.sense(null))
 		{
 			launcherFeed.actuate(feedMagnitude);
