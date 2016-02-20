@@ -324,6 +324,7 @@ public class Robot extends IterativeRobot
 	    
 	    //CAMERA INIT
 	    	navx = new AHRS(SerialPort.Port.kMXP);
+	    	//TODO: The navx is mounted vertically rather than horizontally, so this may not get the angle correctly
 	      	angleUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
 	      	try
 	      	{
@@ -381,6 +382,9 @@ public class Robot extends IterativeRobot
 		//leftClimberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
 		//rightClimberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
 		
+		//TODO: not the most important thing to calibrate, would still be nice
+		//rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
+		//leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 	    
     }
     public void teleopPeriodic() 
