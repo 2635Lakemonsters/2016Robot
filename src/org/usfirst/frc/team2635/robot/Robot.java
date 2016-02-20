@@ -10,14 +10,10 @@ import org.usfirst.frc.team2635.modules.SensorNavxAngle;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 import com.lakemonsters2635.actuator.modules.ActuatorSimple;
-import com.lakemonsters2635.actuator.modules.DriveArcade;
 import com.lakemonsters2635.sensor.interfaces.BaseSensor;
-import com.lakemonsters2635.sensor.modules.SensorDummy;
 import com.lakemonsters2635.sensor.modules.SensorOneShot;
 import com.lakemonsters2635.sensor.modules.SensorRawButton;
-import com.lakemonsters2635.sensor.modules.SensorRawJoystickAxis;
 import com.lakemonsters2635.sensor.modules.SensorTargetAngleFromImage;
 import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
 import com.lakemonsters2635.util.ImageGrabber;
@@ -27,9 +23,7 @@ import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -42,6 +36,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot 
 {
+//DEBUG
+	//Switch these on and off to enable and disable parts of the robot
+//	boolean shooterEnabled = true;
+//	boolean driveEnabled = true;
+//	boolean climberEnabled = true;
+//	boolean cameraEnabled = true;
+//END DEBUG
 //CONSTANTS
 	//DRIVE CONSTANTS
 		final int REAR_RIGHT_CHANNEL = 1;
@@ -121,8 +122,10 @@ public class Robot extends IterativeRobot
 		final int TILT_CHANNEL = 10;
 		final int ELEVATOR_CHANNEL = 11;
 		
-		final double FIRE_SPEED = 1.0;
+		final double FIRE_SPEED = 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
 		final double FEED_SPEED = 1.0;
+		final double LOAD_FRONT_SPEED = 0.5; //TODO: If speed mode implemented, multiply this by speed scaler
+		final double LOAD_BACK_SPEED = 0.5;
 		
 		final double TILT_SCALER = 1.0; //TODO: Find maximum tilt distance;
 		final double ELEVATION_DISTANCE = 0.0; //TODO: Find maximum elevation distance
@@ -130,8 +133,8 @@ public class Robot extends IterativeRobot
 		final int TILT_AXIS = 2;
 		final int AIM_BUTTON = 3;
 		final int FIRE_BUTTON = 1;
-		final int FEED_FORWARD_BUTTON = 2;
-		
+		final int LOAD_FRONT_BUTTON = 2;
+		final int LOAD_BACK_BUTTON = 4;
 	
 	//END SHOOTER CONSTANTS
 	
@@ -209,7 +212,8 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-    public void robotInit() 
+    @Override
+	public void robotInit() 
     {
     	//SMART DASHBOARD INIT
     		//PIDPIDPIDPIDPIDPIDPID
@@ -291,7 +295,7 @@ public class Robot extends IterativeRobot
 	    			new ActuatorSimple(feedMotor), 
 	    			new ActuatorTwoMotorInverse(leftFlywheelMotor, rightFlywheelMotor), 
 	    			new ActuatorSimple(feedMotor),
-	    			new SensorRawButton(FEED_FORWARD_BUTTON, rightJoystick), /**
+	    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), /**
 	    			TODO: Figure out if there are encoders to read to determine whether to feed or not
 	    			If there are you can make a class that implements BaseSensor that returns the speed of the flywheels and 
 	    			then containing that class in a SensorHitTest, like so:
@@ -357,14 +361,16 @@ public class Robot extends IterativeRobot
 	 * You can add additional auto modes by adding additional comparisons to the switch structure below with additional strings.
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
-    public void autonomousInit() 
+    @Override
+	public void autonomousInit() 
     {
     }
 
     /**
      * This function is called periodically during autonomous
      */
-    public void autonomousPeriodic() 
+    @Override
+	public void autonomousPeriodic() 
     {
     }
 
@@ -387,11 +393,13 @@ public class Robot extends IterativeRobot
 		//leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 	    
     }
-    public void teleopPeriodic() 
+    @Override
+	public void teleopPeriodic() 
     {
     	//DEBUG
     		boolean climbUp = (Boolean) climbUpOneShot.sense(leftJoystick.getRawButton(CLIMB_UP_BUTTON));
     		boolean climbDown = (Boolean) climbDownOneShot.sense(leftJoystick.getRawButton(CLIMB_DOWN_BUTTON));
+    	
     		SmartDashboard.putBoolean("climbUp", climbUp);
     		SmartDashboard.putBoolean("climbDown", climbDown);
     		SmartDashboard.putNumber("Tilt Encoder", tiltMotor.getPosition());
@@ -449,7 +457,18 @@ public class Robot extends IterativeRobot
         		flywheel.fire(FIRE_SPEED, ELEVATION_DISTANCE, tiltAngle, FEED_SPEED);
         	}
         //END TELEOP SHOOTER AND CAMERA AND DRIVE
-        
+        //TELEOP FEEDER
+        	boolean feedFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+        	boolean feedBack = rightJoystick.getRawButton(LOAD_BACK_BUTTON);
+        	if(feedFront)
+        	{
+        		flywheel.loadFront(LOAD_FRONT_SPEED);
+        	}
+        	if(feedBack)
+        	{
+        		flywheel.loadBack(LOAD_BACK_SPEED);
+        	}
+        //END TELEOP FEEDER
         //TELEOP CLIMBER
         	//TODO:The climber wont go anywhere until the max height of the climber is filled in in the constants section
         
@@ -469,7 +488,8 @@ public class Robot extends IterativeRobot
     /**
      * This function is called periodically during test mode
      */
-    public void testPeriodic() 
+    @Override
+	public void testPeriodic() 
     {
     	//Add motors and sensors using the LiveWindow class to test them. ex:
     	//LiveWindow.addActuator("Rear right motor", REAR_RIGHT_CHANNEL, rearRightMotor);
