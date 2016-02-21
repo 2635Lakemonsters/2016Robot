@@ -15,7 +15,6 @@ public class DriveThreeMotorTankDrive extends DriveThreeMotor
 			SpeedController frontLeftMotor)
 	{
 		super(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

@@ -9,11 +9,11 @@ import edu.wpi.first.wpilibj.SpeedController;
  * @author LakeM
  *
  */
-public class ActuatorTwoMotorInverse extends BaseActuator<Double>
+public class ActuatorTwoMotor extends BaseActuator<Double>
 {
 	SpeedController leftMotor;
 	SpeedController rightMotor;
-	public ActuatorTwoMotorInverse(SpeedController leftMotor, SpeedController rightMotor)
+	public ActuatorTwoMotor(SpeedController leftMotor, SpeedController rightMotor)
 	{
 		super();
 		this.leftMotor = leftMotor;
@@ -23,7 +23,7 @@ public class ActuatorTwoMotorInverse extends BaseActuator<Double>
 	public boolean actuate(Double magnitude)
 	{
 		leftMotor.set(magnitude);
-		rightMotor.set(-magnitude);
+		rightMotor.set(magnitude);
 		return false;
 	}
 }

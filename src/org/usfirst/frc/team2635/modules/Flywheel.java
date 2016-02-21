@@ -16,7 +16,7 @@ public class Flywheel
 	BaseActuator<Double> launcherFeed;
 	
 	BaseActuator<Double> frontLoader;
-	BaseActuator<Double> backLoader;
+	//BaseActuator<Double> backLoader;
 	BaseSensor<Boolean> canFireSensor;
 	
 	BaseActuator<Double> elevator;
@@ -32,14 +32,14 @@ public class Flywheel
 	 * @param tilter The thing that tilts the shooter up and down
 	 */
 	public Flywheel(BaseActuator<Double> wheel, BaseActuator<Double> launcherFeed, BaseActuator<Double> frontLoader,
-			BaseActuator<Double> backLoader, BaseSensor<Boolean> canFireSensor, BaseActuator<Double> elevator,
+			/*BaseActuator<Double> backLoader,*/ BaseSensor<Boolean> canFireSensor, BaseActuator<Double> elevator,
 			BaseActuator<Double> tilter)
 	{
 		super();
 		this.wheel = wheel;
 		this.launcherFeed = launcherFeed;
 		this.frontLoader = frontLoader;
-		this.backLoader = backLoader;
+		//this.backLoader = backLoader;
 		this.canFireSensor = canFireSensor;
 		this.elevator = elevator;
 		this.tilter = tilter;
@@ -48,9 +48,11 @@ public class Flywheel
 	{
 		//Get the wheel spinning
 		wheel.actuate(wheelMagnitude);
-
+		
 		//Get into firing position
+		
 		elevator.actuate(elevateMagnitude);
+		
 		tilter.actuate(tiltMagnitude);
 		
 		//Check if the launcher is ready to fire or not
@@ -61,14 +63,25 @@ public class Flywheel
 		}
 		
 	}
-	public void loadBack(double magnitude)
+//	public void loadBack(double magnitude)
+//	{
+//		backLoader.actuate(magnitude);
+//	}
+	public void feed(double magnitude)
 	{
-		backLoader.actuate(magnitude);
+		launcherFeed.actuate(magnitude);
 	}
-	
-	public void loadFront(double magnitude)
+	public void wheel(double magnitude)
 	{ 
 		frontLoader.actuate(magnitude);
+	}
+	public void elevate(double magnitude)
+	{
+		elevator.actuate(magnitude);
+	}
+	public void tilt(double magnitude)
+	{
+		tilter.actuate(magnitude);
 	}
 	
 }
