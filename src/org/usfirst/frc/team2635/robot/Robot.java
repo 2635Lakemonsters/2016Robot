@@ -273,16 +273,18 @@ public class Robot extends IterativeRobot
 		//leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 	    
     }
-    public void cameraTeleop()
+    //Return y axis angle
+    public double cameraTeleop()
     {
     	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
-    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
     	//TODO: Tilt angle is currently set to just always be manually set. Change this to 0.0 when Y axis PID is figured out
     	//Transform [-1,1] to [0,1]
     	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_SCALER ;
     	if(findTargetAngle && cameraExists)
     	{
+    		flywheel.elevate(ELEVATION_DISTANCE);
     		//May want to wrap this logic into a couple of modules and put them in the PIDDrive class, but not necessary for right now
+    		//TODO: Will probably want to add some logic to block untill the flywheel is elevated
     		if(!cameraXPID.isEnabled())
     		{
     			
@@ -295,8 +297,8 @@ public class Robot extends IterativeRobot
     			cameraXPID.setSetpoint(angleToTarget.x);
     			//PID will drive for us
     			cameraXPID.enable();
-    			//TODO: need to set tilt to some distance that is probably the ratio between the angle to the target and the veiw angle, multiplied by the maximum tilt distance
-    		
+    			//TODO: Need to find tilt scaler
+    			tiltAngle = (angleToTarget.y / CAMERA_VIEW_ANGLE) * TILT_SCALER;
     		}	
     		
         	
@@ -308,18 +310,23 @@ public class Robot extends IterativeRobot
     			//Prevent PID from screwing with normal driving
     			cameraXPID.disable();
     		}
-    		tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_SCALER ;
-    		//Drive normally 
-        	//Depending on how the robot is wired, the axes values may have to be inverted
-    		//If the joysticks are swapped, swap the order of the argumens in robotDrive.drive . We want to keep the right joystick on the right hand side
-
-        	double RY = rightJoystick.getRawAxis(RIGHT_Y_AXIS);
-        	double LY = -leftJoystick.getRawAxis(LEFT_Y_AXIS);
-        	robotDrive.drive(LY, RY);
 
     	}
+    	return tiltAngle;
+    	
+	
+    }
+    public void shooterTeleop(double tiltAngle)
+    {
+    	boolean feedFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+    	//boolean feedBack = rightJoystick.getRawButton(LOAD_BACK_BUTTON);
+    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
+    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
+    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+    	
     	if(fire)
     	{
+
     		//TODO: integrate vision processing, figure out elevateMagnitude
     		flywheel.fire(FIRE_SPEED, ELEVATION_DISTANCE, tiltAngle, FEED_SPEED);
     	}
@@ -327,61 +334,69 @@ public class Robot extends IterativeRobot
     	{
     		flywheel.fire(0.0, 0.0, 0.0, 0.0);
     	}
-	
+
+    	if(feedFront)
+    	{
+    		flywheel.wheel(LOAD_FRONT_SPEED);
+    	}
+//    	if(feedBack)
+//    	{
+//    		flywheel.loadBack(LOAD_BACK_SPEED);
+//    	}
+    	//
+    	if(elevateUp)
+    	{
+    		flywheel.elevate(ELEVATE_UP_SPEED);
+    	}
+    	if(elevateDown)
+    	{
+    		flywheel.elevate(ELEVATE_DOWN_SPEED);
+    	}
+
+    }
+    public void driveTeleop()
+    {
+    	double RY = rightJoystick.getRawAxis(RIGHT_Y_AXIS);
+    	double LY = -leftJoystick.getRawAxis(LEFT_Y_AXIS);
+    	robotDrive.drive(LY, RY);
+
+    }
+    public void climberTeleop()
+    {
+		boolean climbUp = (Boolean) climbUpOneShot.sense(leftJoystick.getRawButton(CLIMB_UP_BUTTON));
+		boolean climbDown = (Boolean) climbDownOneShot.sense(leftJoystick.getRawButton(CLIMB_DOWN_BUTTON));
+
+    	//DEBUG
+		SmartDashboard.putBoolean("climbUp", climbUp);
+		SmartDashboard.putBoolean("climbDown", climbDown);
+		//END DEBUG
+		//TODO: need to find max climber height
+    	if(climbUp && climberIndex < CLIMBER_POSITIONS.length - 1)
+    	{
+    		climberIndex++;
+    	}
+    	else if(climbDown && climberIndex > 0)
+    	{
+    		climberIndex--;
+    	}
     }
     @Override
 	public void teleopPeriodic() 
     {
     	//DEBUG
-    		boolean climbUp = (Boolean) climbUpOneShot.sense(leftJoystick.getRawButton(CLIMB_UP_BUTTON));
-    		boolean climbDown = (Boolean) climbDownOneShot.sense(leftJoystick.getRawButton(CLIMB_DOWN_BUTTON));
     	
-    		SmartDashboard.putBoolean("climbUp", climbUp);
-    		SmartDashboard.putBoolean("climbDown", climbDown);
     		SmartDashboard.putNumber("Tilt Encoder", tiltMotor.getPosition());
     		SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition());
-    		//SmartDashboard.putNumber("Climber left encoder", leftClimberMotor.getPosition());
     		SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
-        //TELEOP SHOOTER AND CAMERA AND DRIVE
-    		cameraTeleop();
-        //END TELEOP SHOOTER AND CAMERA AND DRIVE
-        //TELEOP FEEDER
-        	boolean feedFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
-        	//boolean feedBack = rightJoystick.getRawButton(LOAD_BACK_BUTTON);
-        	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
-        	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
-        	if(feedFront)
-        	{
-        		flywheel.wheel(LOAD_FRONT_SPEED);
-        	}
-//        	if(feedBack)
-//        	{
-//        		flywheel.loadBack(LOAD_BACK_SPEED);
-//        	}
-        	//
-        	if(elevateUp)
-        	{
-        		flywheel.elevate(ELEVATE_UP_SPEED);
-        	}
-        	if(elevateDown)
-        	{
-        		flywheel.elevate(ELEVATE_DOWN_SPEED);
-        	}
-        //END TELEOP FEEDER
-        //TELEOP CLIMBER
-        	//TODO:The climber wont go anywhere until the max height of the climber is filled in in the constants section
-        
-        	if(climbUp && climberIndex < CLIMBER_POSITIONS.length - 1)
-        	{
-        		climberIndex++;
-        	}
-        	else if(climbDown && climberIndex > 0)
-        	{
-        		climberIndex--;
-        	}
-        	//climber.actuate(CLIMBER_POSITIONS[climberIndex]);
-        //END TELEOP CLIMBER
+    		
+    		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
+    		//As a result, cameraTeleop must always be run before shooterTeleop
+    		double tiltAngle = cameraTeleop();
+    		shooterTeleop(tiltAngle);
+    		
+    		driveTeleop();
+    		climberTeleop();
 
     }
     

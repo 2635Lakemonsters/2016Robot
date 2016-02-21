@@ -40,9 +40,9 @@ public final class Constants
 		static final String CAMERA_Y_KEY_I = "Camera Y I";
 		static final String CAMERA_Y_KEY_D = "Camera Y D";
 		
-	    static double CAMERA_X_P_DEFAULT = 0.02;
-	    static double CAMERA_X_I_DEFAULT = 0.0006;
-	    static double CAMERA_X_D_DEFAULT = 0.0;
+	    static final double CAMERA_X_P_DEFAULT = 0.02;
+	    static final double CAMERA_X_I_DEFAULT = 0.0006;
+	    static final double CAMERA_X_D_DEFAULT = 0.0;
 
 		static final double CAMERA_Y_P_DEFAULT = 0.0;
 		static final double CAMERA_Y_I_DEFAULT = 0.0;
