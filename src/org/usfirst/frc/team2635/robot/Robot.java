@@ -1,12 +1,14 @@
 
 package org.usfirst.frc.team2635.robot;
 
+import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
 import org.usfirst.frc.team2635.modules.ActuatorTwoMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 import org.usfirst.frc.team2635.modules.Flywheel;
 import org.usfirst.frc.team2635.modules.PIDOutputThreeMotorRotate;
 import org.usfirst.frc.team2635.modules.SensorNavxAngle;
+import org.usfirst.frc.team2635.robot.Constants.Settings;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
@@ -40,6 +42,13 @@ import static org.usfirst.frc.team2635.robot.Constants.Shooter.*;
  */
 public class Robot extends IterativeRobot 
 {
+	//TODO: Make everything fit FunctionalityMode structure
+	enum FunctionalityMode
+	{
+		Competition, //More position
+		Debug //More vbus
+	}
+	FunctionalityMode runMode = FunctionalityMode.Debug;
 //See Constants.java for constants
 //VARIABLES
 	//DRIVE VARIABLES
@@ -89,42 +98,16 @@ public class Robot extends IterativeRobot
 		boolean cameraExists = false;
 	//END CAMERA VARIABLES
 		
+	
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-    @Override
-	public void robotInit() 
-    {
-    	//SMART DASHBOARD INIT
-    		//PIDPIDPIDPIDPIDPIDPID
-	    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
-	    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
-	    	SmartDashboard.putNumber(DRIVE_KEY_D, DRIVE_D_DEFAULT);
-	    	
-	    	SmartDashboard.putNumber(CAMERA_X_KEY_P, CAMERA_X_P_DEFAULT);
-	    	SmartDashboard.putNumber(CAMERA_X_KEY_I, CAMERA_X_I_DEFAULT);
-	    	SmartDashboard.putNumber(CAMERA_X_KEY_D, CAMERA_X_D_DEFAULT);
-	    	
-	    	SmartDashboard.putNumber(CAMERA_Y_KEY_P, CAMERA_Y_P_DEFAULT);
-	    	SmartDashboard.putNumber(CAMERA_Y_KEY_I, CAMERA_Y_I_DEFAULT);
-	    	SmartDashboard.putNumber(CAMERA_Y_KEY_D, CAMERA_Y_D_DEFAULT);
-	    	
-	    	SmartDashboard.putNumber(CLIMBER_KEY_P, CLIMBER_P_DEFAULT);
-	    	SmartDashboard.putNumber(CLIMBER_KEY_I, CLIMBER_I_DEFAULT);
-	    	SmartDashboard.putNumber(CLIMBER_KEY_D, CLIMBER_D_DEFAULT);
-	    	
-	    	SmartDashboard.putNumber(ELEVATOR_KEY_P, ELEVATOR_P_DEFAULT);
-	    	SmartDashboard.putNumber(ELEVATOR_KEY_I, ELEVATOR_I_DEFAULT);
-	    	SmartDashboard.putNumber(ELEVATOR_KEY_D, ELEVATOR_D_DEFAULT);
-	    	
-	    	SmartDashboard.putNumber(SHOOTER_KEY_P, SHOOTER_P_DEFAULT);
-	    	SmartDashboard.putNumber(SHOOTER_KEY_I, SHOOTER_I_DEFAULT);
-	    	SmartDashboard.putNumber(SHOOTER_KEY_D, SHOOTER_D_DEFAULT);
-	    //END SMART DASHBOARD INIT
-	    //TODO: if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
-	    //DRIVE INIT
-	    	//TODO: might have to invert the output for some of these. There is a function to do that in CANTalon
+	public void driveInit(FunctionalityMode setupMode)
+	{
+		if(setupMode == FunctionalityMode.Competition)
+		{
+			//TODO: might have to invert the output for some of these. There is a function to do that in CANTalon
 	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
 	    	rearRightMotor.changeControlMode(TalonControlMode.Follower);
 	    	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
@@ -149,18 +132,31 @@ public class Robot extends IterativeRobot
 	    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
 	    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
 			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
-	      	
-	    	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
-	    	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
-	    //END DRIVE INIT
-	    	
-    	//SHOOTER INIT
+		}
+		else if(setupMode == FunctionalityMode.Debug)
+		{
+			//Default vbus mode
+	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
+	    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+	    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+	    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+	    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
+			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
+		}
+		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
+    	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
+    	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
+
+	}
+    public void shooterInit(FunctionalityMode setupMode)
+    {
+    	if(setupMode == FunctionalityMode.Competition)
+    	{
 	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
-	    	//rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+	    	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	
 	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
-	    	//leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
-	    	//feedMotor = new CANTalon(FEED_CHANNEL);
+	    	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	
 	    	rightElevatorMotor = new CANTalon(ELEVATOR_RIGHT_CHANNEL);
 	    	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
@@ -174,11 +170,13 @@ public class Robot extends IterativeRobot
 	    	tiltMotor.changeControlMode(TalonControlMode.Position);
 	    	tiltMotor.setPID(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT);
 	    	
+	    	feedMotor = new CANTalon(FEED_CHANNEL);
+	    	
 	    	flywheel = new Flywheel(
 	    			new ActuatorTwoMotor(leftFlywheelMotor, rightFlywheelMotor), 
 	    			/*new ActuatorSimple(feedMotor), */
-	    			new ActuatorTwoMotor(leftFlywheelMotor, rightFlywheelMotor), 
-	    			new ActuatorSimple(feedMotor),
+	    			new ActuatorSimple(feedMotor), 
+	    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
 	    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), /**
 	    			TODO: Figure out if there are encoders to read to determine whether to feed or not
 	    			If there are you can make a class that implements BaseSensor that returns the speed of the flywheels and 
@@ -191,45 +189,124 @@ public class Robot extends IterativeRobot
 	    			**/
 	    			new ActuatorSimple(rightElevatorMotor),
 	    			new ActuatorSimple(tiltMotor));
-	    //END SHOOTER INIT
+    	}
+    	else if(setupMode == FunctionalityMode.Debug)
+    	{
+	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+	    	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
 	    	
-	    
-	    //CLIMBER INIT
-	    	//TODO: Might have to invert the sensor or output of one of these. There are member functions for both in CANTalon
-	    	climberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
-	    	climberMotor.changeControlMode(TalonControlMode.Position);
-	    	climberMotor.setPID(CLIMBER_P_DEFAULT, CLIMBER_I_DEFAULT, CLIMBER_D_DEFAULT);
+	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+	    	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
 	    	
+	    	rightElevatorMotor = new CANTalon(ELEVATOR_RIGHT_CHANNEL);
 	    	
-	    	climbUpOneShot = new SensorOneShot(false);
-	    	climbDownOneShot = new SensorOneShot(false);
+	    	leftElevatorMotor = new CANTalon(ELEVATOR_LEFT_CHANNEL);
+	    	leftElevatorMotor.changeControlMode(TalonControlMode.Follower);
+	    	leftElevatorMotor.set(ELEVATOR_RIGHT_CHANNEL);
 	    	
-	    	climber = new ActuatorSimple(climberMotor);
-	    //END CLIMBER INIT
-	    
-	    //CAMERA INIT
-	    	navx = new AHRS(SerialPort.Port.kMXP);
-	    	//TODO: The navx is mounted vertically rather than horizontally, so this may not get the angle correctly
-	      	angleUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
-	      	try
-	      	{
-	      		int session = NIVision.IMAQdxOpenCamera("cam0",
-	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-	      		camera = new ImageGrabber(session, true);
-	      	
-	      		//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
-	      		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
-	      	
-	      		cameraExists = true;
-	      	}
-	      	catch(Exception ex)
-	      	{
-	      		cameraExists = false;
-	      		System.err.println("Camera does not exist!");
-	      	}
-      		cameraXPID = new PIDController(CAMERA_X_P_DEFAULT, CAMERA_X_I_DEFAULT, CAMERA_X_D_DEFAULT, angleUnwrapper, new PIDOutputThreeMotorRotate(robotDrive));
+	    	tiltMotor = new CANTalon(TILT_CHANNEL);
+	    	
+	    	feedMotor = new CANTalon(FEED_CHANNEL);
+	    	
+	    	flywheel = new Flywheel(
+	    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+	    			/*new ActuatorSimple(feedMotor), */
+	    			new ActuatorSimple(feedMotor), 
+	    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+	    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), /**
+	    			TODO: Figure out if there are encoders to read to determine whether to feed or not
+	    			If there are you can make a class that implements BaseSensor that returns the speed of the flywheels and 
+	    			then containing that class in a SensorHitTest, like so:
+	    			new SensorHitTest(new SensorCANTalonSpeed(...))
+	    			SensorHitTest hasn't been tested yet so if there are issues check that it is working like intended.
+	    			If you are able to debug it you will have to make the change in the LakeLib project,
+	    			export it to the LakeLib jar, and then restart eclipse so intellisense can catch up.
+	    			
+	    			**/
+	    			new ActuatorSimple(rightElevatorMotor),
+	    			new ActuatorSimple(tiltMotor));
 
-      	//END CAMERA INIT
+    	}
+    		
+    }
+	public void climberInit()
+	{
+    	climberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
+    	climberMotor.changeControlMode(TalonControlMode.Position);
+    	climberMotor.setPID(CLIMBER_P_DEFAULT, CLIMBER_I_DEFAULT, CLIMBER_D_DEFAULT);
+    	
+    	
+    	climbUpOneShot = new SensorOneShot(false);
+    	climbDownOneShot = new SensorOneShot(false);
+    	
+    	climber = new ActuatorSimple(climberMotor);
+
+	}
+	public void cameraInit()
+	{
+    	navx = new AHRS(SerialPort.Port.kMXP);
+    	//TODO: The navx is mounted vertically rather than horizontally, so this may not get the angle correctly
+      	angleUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
+      	try
+      	{
+      		int session = NIVision.IMAQdxOpenCamera("cam0",
+                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+      		camera = new ImageGrabber(session, true);
+      	
+      		//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
+      		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
+      	
+      		cameraExists = true;
+      	}
+      	catch(Exception ex)
+      	{
+      		cameraExists = false;
+      		System.err.println("Camera does not exist!");
+      	}
+  		cameraXPID = new PIDController(CAMERA_X_P_DEFAULT, CAMERA_X_I_DEFAULT, CAMERA_X_D_DEFAULT, angleUnwrapper, new PIDOutputThreeMotorRotate(robotDrive));
+
+	}
+	public void smartDashboardInit()
+	{
+		SmartDashboard.putBoolean(Settings.AUTO_KEY, true);
+		//PIDPIDPIDPIDPIDPIDPID
+    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
+    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
+    	SmartDashboard.putNumber(DRIVE_KEY_D, DRIVE_D_DEFAULT);
+    	
+    	SmartDashboard.putNumber(CAMERA_X_KEY_P, CAMERA_X_P_DEFAULT);
+    	SmartDashboard.putNumber(CAMERA_X_KEY_I, CAMERA_X_I_DEFAULT);
+    	SmartDashboard.putNumber(CAMERA_X_KEY_D, CAMERA_X_D_DEFAULT);
+    	
+    	SmartDashboard.putNumber(CAMERA_Y_KEY_P, CAMERA_Y_P_DEFAULT);
+    	SmartDashboard.putNumber(CAMERA_Y_KEY_I, CAMERA_Y_I_DEFAULT);
+    	SmartDashboard.putNumber(CAMERA_Y_KEY_D, CAMERA_Y_D_DEFAULT);
+    	
+    	SmartDashboard.putNumber(CLIMBER_KEY_P, CLIMBER_P_DEFAULT);
+    	SmartDashboard.putNumber(CLIMBER_KEY_I, CLIMBER_I_DEFAULT);
+    	SmartDashboard.putNumber(CLIMBER_KEY_D, CLIMBER_D_DEFAULT);
+    	
+    	SmartDashboard.putNumber(ELEVATOR_KEY_P, ELEVATOR_P_DEFAULT);
+    	SmartDashboard.putNumber(ELEVATOR_KEY_I, ELEVATOR_I_DEFAULT);
+    	SmartDashboard.putNumber(ELEVATOR_KEY_D, ELEVATOR_D_DEFAULT);
+    	
+    	SmartDashboard.putNumber(SHOOTER_KEY_P, SHOOTER_P_DEFAULT);
+    	SmartDashboard.putNumber(SHOOTER_KEY_I, SHOOTER_I_DEFAULT);
+    	SmartDashboard.putNumber(SHOOTER_KEY_D, SHOOTER_D_DEFAULT);
+
+	}
+    @Override
+	public void robotInit() 
+    {
+    	//SMART DASHBOARD INIT
+	    //END SMART DASHBOARD INIT
+	    //TODO: if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
+	    //smartDashboardInit();
+    	driveInit(runMode);	
+	    shooterInit(runMode);
+	    //climberInit();
+	    //cameraInit();
+    
     }
     
     
@@ -245,6 +322,7 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousInit() 
     {
+    	//TODO: set motors to position mode
     }
 
     /**
@@ -253,6 +331,11 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousPeriodic() 
     {
+    	if(SmartDashboard.getBoolean(Settings.AUTO_KEY))
+    	{
+    		//Drive forward whatever distance it is to cross the defense,
+    		//Drive backwards to position
+    	}
     }
 
     /**
@@ -261,15 +344,15 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    	frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
-    	frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
-		tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
-		cameraXPID.setPID(SmartDashboard.getNumber(CAMERA_X_KEY_P), SmartDashboard.getNumber(CAMERA_X_KEY_I), SmartDashboard.getNumber(CAMERA_X_KEY_D));
-		rightElevatorMotor.setPID(SmartDashboard.getNumber(ELEVATOR_KEY_P), SmartDashboard.getNumber(ELEVATOR_KEY_I), SmartDashboard.getNumber(ELEVATOR_KEY_D));
-		climberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
-		
-		//TODO: not tfhe most important thing to calibrate, would still be nice
-		rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
+//    	frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+//    	frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+//		tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
+//		cameraXPID.setPID(SmartDashboard.getNumber(CAMERA_X_KEY_P), SmartDashboard.getNumber(CAMERA_X_KEY_I), SmartDashboard.getNumber(CAMERA_X_KEY_D));
+//		rightElevatorMotor.setPID(SmartDashboard.getNumber(ELEVATOR_KEY_P), SmartDashboard.getNumber(ELEVATOR_KEY_I), SmartDashboard.getNumber(ELEVATOR_KEY_D));
+//		climberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
+//		
+//		//TODO: not tfhe most important thing to calibrate, would still be nice
+//		rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 		//leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 	    
     }
@@ -316,43 +399,92 @@ public class Robot extends IterativeRobot
     	
 	
     }
-    public void shooterTeleop(double tiltAngle)
+    public void shooterTeleop(double tiltAngle, FunctionalityMode teleopMode)
     {
-    	boolean feedFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
-    	//boolean feedBack = rightJoystick.getRawButton(LOAD_BACK_BUTTON);
-    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
-    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
-    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
-    	
-    	if(fire)
+    	if(teleopMode == FunctionalityMode.Competition)
     	{
+	    	boolean feedFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+	    	//boolean feedBack = rightJoystick.getRawButton(LOAD_BACK_BUTTON);
+	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
+	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
+	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+	    	
+	    	if(fire)
+	    	{
+	
+	    		//TODO: integrate vision processing, figure out elevateMagnitude
+	    		flywheel.fire(FIRE_SPEED, ELEVATION_DISTANCE, tiltAngle, FEED_SPEED);
+	    	}
+	    	else
+	    	{
+	    		flywheel.fire(0.0, 0.0, 0.0, 0.0);
+	    	}
+	
+	    	if(feedFront)
+	    	{
+	    		flywheel.wheel(LOAD_FRONT_SPEED);
+	    	}
+	//    	if(feedBack)
+	//    	{
+	//    		flywheel.loadBack(LOAD_BACK_SPEED);
+	//    	}
+	    	//
+	    	if(elevateUp)
+	    	{
+	    		flywheel.elevate(ELEVATE_UP_SPEED);
+	    	}
+	    	if(elevateDown)
+	    	{
+	    		flywheel.elevate(ELEVATE_DOWN_SPEED);
+	    	}
+    	}
+    	else if(teleopMode == FunctionalityMode.Debug)
+    	{
+    		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
+	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
+	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+	    	SmartDashboard.putBoolean("Fire", fire);
+	    	//TODO: Temporary
+	    	boolean tiltUp = rightJoystick.getRawButton(6);
+	    	boolean tiltDown = rightJoystick.getRawButton(7);
+	    	if(fire)
+	    	{
+	    		flywheel.wheel(-FIRE_SPEED);
+	    	}
+	    	else if(loadFront)
+	    	{
+	    		flywheel.loadFront(FEED_SPEED);
+	    	}	    
+	    	else if(elevateUp)
+	    	{
+	    		flywheel.elevate(ELEVATE_UP_SPEED);
+	    	}
+	    	else if(elevateDown)
+	    	{
+	    		flywheel.elevate(ELEVATE_DOWN_SPEED);
+	    	}
+	    
+	    	//TODO: Temporary
+	    	else if(tiltUp)
+	    	{
+	    		flywheel.tilt(1.0);
+	    	}
+	    	else if(tiltDown)
+	    	{
+	    		flywheel.tilt(-1.0);
+	    	}
+	    	else
+	    	{
+	    		flywheel.elevate(0.0);
+	    		flywheel.loadFront(0.0);
+	    		flywheel.tilt(0.0);
+	    		flywheel.wheel(0.0);
+	    	}
+	    	
 
-    		//TODO: integrate vision processing, figure out elevateMagnitude
-    		flywheel.fire(FIRE_SPEED, ELEVATION_DISTANCE, tiltAngle, FEED_SPEED);
+	    	
     	}
-    	else
-    	{
-    		flywheel.fire(0.0, 0.0, 0.0, 0.0);
-    	}
-
-    	if(feedFront)
-    	{
-    		flywheel.wheel(LOAD_FRONT_SPEED);
-    	}
-//    	if(feedBack)
-//    	{
-//    		flywheel.loadBack(LOAD_BACK_SPEED);
-//    	}
-    	//
-    	if(elevateUp)
-    	{
-    		flywheel.elevate(ELEVATE_UP_SPEED);
-    	}
-    	if(elevateDown)
-    	{
-    		flywheel.elevate(ELEVATE_DOWN_SPEED);
-    	}
-
     }
     public void driveTeleop()
     {
@@ -385,18 +517,19 @@ public class Robot extends IterativeRobot
     {
     	//DEBUG
     	
-    		SmartDashboard.putNumber("Tilt Encoder", tiltMotor.getPosition());
-    		SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition());
-    		SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
+    		//SmartDashboard.putNumber("Tilt Encoder", tiltMotor.getPosition());
+    		//SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition());
+    		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
     		
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
     		//As a result, cameraTeleop must always be run before shooterTeleop
-    		double tiltAngle = cameraTeleop();
-    		shooterTeleop(tiltAngle);
+    		//double tiltAngle = cameraTeleop();
+    		double tiltAngle = 0.0;
+    		shooterTeleop(tiltAngle, runMode);
     		
     		driveTeleop();
-    		climberTeleop();
+    		//climberTeleop();
 
     }
     

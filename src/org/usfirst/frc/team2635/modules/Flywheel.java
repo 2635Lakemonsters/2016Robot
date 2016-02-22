@@ -66,13 +66,13 @@ public class Flywheel
 //	public void loadBack(double magnitude)
 //	{
 //		backLoader.actuate(magnitude);
-//	}
-	public void feed(double magnitude)
-	{
-		launcherFeed.actuate(magnitude);
-	}
+//	}}
 	public void wheel(double magnitude)
 	{ 
+		wheel.actuate(magnitude);
+	}
+	public void loadFront(double magnitude)
+	{
 		frontLoader.actuate(magnitude);
 	}
 	public void elevate(double magnitude)
