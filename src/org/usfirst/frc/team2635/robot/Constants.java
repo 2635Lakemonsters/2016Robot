@@ -83,21 +83,30 @@ public final class Constants
 	
 		static  int RIGHT_FLYWHEEL_CHANNEL = 10;
 		static  int LEFT_FLYWHEEL_CHANNEL = 7;
+	
 		static  int TILT_CHANNEL = 9;
-		static  int ELEVATOR_RIGHT_CHANNEL = 13;
-		static  int ELEVATOR_LEFT_CHANNEL = 12;
+		
+		static  int RIGHT_ELEVATOR_CHANNEL = 13;
+		static  int LEFT_ELEVATOR_CHANNEL = 12;
+		
 		static  int FEED_CHANNEL = 11;
 		
 		static  double FIRE_SPEED = 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
 		static  double FEED_SPEED = 0.5;
+		
 		static  double LOAD_FRONT_SPEED = -0.5; //TODO: If speed mode implemented, multiply this by speed scaler
 		//static  double LOAD_BACK_SPEED = 0.5;
 		
 		static  double ELEVATE_UP_SPEED = 0.7;
 		static  double ELEVATE_DOWN_SPEED = -0.7;
 		
-		static  double TILT_SCALER = 1.0; //TODO: Find maximum tilt distance;
-		static  double ELEVATION_DISTANCE = 0.0; //TODO: Find maximum elevation distance
+		static double elevatorPosition = 0.0;
+		
+		static  double TILT_MAX = 1.0; //TODO: Find maximum tilt distance;
+		static  double ELEVATION_MAX = 0.0; //TODO: Find maximum elevation distance
+		static double ELEVATION_ERROR = 5.0;
+		static double SHOOTER_ERROR = 10.0;
+		static double TILT_ERROR = 3.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
 		static  int AIM_BUTTON = 3;
@@ -133,8 +142,9 @@ public final class Constants
 		static  int CLIMB_DOWN_BUTTON = 2;
 
 	}
-	public static class Settings
+	public static class Autonomous
 	{
-		static  String AUTO_KEY ="Auto enabled";
+		static String AUTO_KEY ="Auto enabled";
+		static double FORWARD_DISTANCE;
 	}
 }

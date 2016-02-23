@@ -26,20 +26,18 @@ public class Flywheel
 	 * @param wheel The thing(s) that accelerate the projectile
 	 * @param launcherFeed The thing that feeds the projectile to the wheel
 	 * @param frontLoader The thing that loads from the front
-	 * @param backLoader The thing that loads from behind
 	 * @param canFireSensor The thing that checks if the ball should be fed to the wheel or not
 	 * @param elevator The thing that raises the shooter up and down
 	 * @param tilter The thing that tilts the shooter up and down
 	 */
 	public Flywheel(BaseActuator<Double> wheel, BaseActuator<Double> launcherFeed, BaseActuator<Double> frontLoader,
-			/*BaseActuator<Double> backLoader,*/ BaseSensor<Boolean> canFireSensor, BaseActuator<Double> elevator,
+			 BaseSensor<Boolean> canFireSensor, BaseActuator<Double> elevator,
 			BaseActuator<Double> tilter)
 	{
 		super();
 		this.wheel = wheel;
 		this.launcherFeed = launcherFeed;
 		this.frontLoader = frontLoader;
-		//this.backLoader = backLoader;
 		this.canFireSensor = canFireSensor;
 		this.elevator = elevator;
 		this.tilter = tilter;
@@ -62,6 +60,13 @@ public class Flywheel
 			launcherFeed.actuate(feedMagnitude);
 		}
 		
+	}
+	public void endFire(double elevatePosition, double tiltPosition)
+	{
+		wheel.actuate(0.0);
+		elevator.actuate(elevatePosition);
+		tilter.actuate(tiltPosition);
+		launcherFeed.actuate(0.0);
 	}
 //	public void loadBack(double magnitude)
 //	{
