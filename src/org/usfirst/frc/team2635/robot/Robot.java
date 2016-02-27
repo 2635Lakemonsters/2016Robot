@@ -2,12 +2,10 @@
 package org.usfirst.frc.team2635.robot;
 
 import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedSingle;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 import org.usfirst.frc.team2635.modules.Flywheel;
 import org.usfirst.frc.team2635.modules.PIDOutputThreeMotorRotate;
-import org.usfirst.frc.team2635.modules.SensorCANTalon;
 import org.usfirst.frc.team2635.modules.SensorCANTalonPIDError;
 import org.usfirst.frc.team2635.modules.SensorThreeAND;
 import org.usfirst.frc.team2635.modules.SensorNavxAngle;
@@ -36,8 +34,6 @@ import static org.usfirst.frc.team2635.robot.Constants.Drive.*;
 import static org.usfirst.frc.team2635.robot.Constants.Camera.*;
 import static org.usfirst.frc.team2635.robot.Constants.Climber.*;
 import static org.usfirst.frc.team2635.robot.Constants.Shooter.*;
-
-import java.util.ArrayList;
 
 import static org.usfirst.frc.team2635.robot.Constants.Autonomous.*;
 
@@ -200,7 +196,10 @@ public class Robot extends IterativeRobot
 	    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
 	    			),
 	    			new ActuatorSimple(rightElevatorMotor),
-	    			new ActuatorSimple(tiltMotor));
+	    			new ActuatorSimple(tiltMotor)
+	    	);
+	    			//Prevent tilt motor from actuating below the chassis
+	    			//new ActuatorBlockingMotor(tiltMotor, new SensorHitTest(new SensorCANTalon(rightElevatorMotor), ELEVATION_MAX, ELEVATION_ABOVE_CHASSIS)));
     	}
     	else if(setupMode == FunctionalityMode.Debug_Vbus)
     	{
@@ -317,9 +316,8 @@ public class Robot extends IterativeRobot
     @Override
 	public void robotInit() 
     {
-    	//SMART DASHBOARD INIT
-	    //END SMART DASHBOARD INIT
-	    //TODO: if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
+    
+	    //if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
 	    smartDashboardInit(runMode);
     	driveInit(runMode);	
 	    shooterInit(runMode);
@@ -395,7 +393,7 @@ public class Robot extends IterativeRobot
     	{
     		//Need to find angle based upon a fully elevated shooter.
     		flywheel.elevate(ELEVATION_MAX);
-    		//May want to wrap this logic into a couple of modules and put them in the PIDDrive class, but not necessary for right now
+    		//TODO: May want to wrap this logic into a couple of modules and put them in the PIDDrive class. Do this after basic functionality is established
     		//TODO: Will probably want to add some logic to block untill the flywheel is elevated
     		if(!cameraXPID.isEnabled())
     		{
@@ -409,7 +407,8 @@ public class Robot extends IterativeRobot
     			cameraXPID.setSetpoint(angleToTarget.x);
     			//PID will drive for us
     			cameraXPID.enable();
-    			//TODO: Need to find tilt scaler
+    			//Tilt angle is ratio between the angle to the target and the maximum angle the camera can see, scaled by the maximum tilt
+    			//TODO: Need to find TILT_MAX
     			tiltAngle = (angleToTarget.y / CAMERA_VIEW_ANGLE) * TILT_MAX;
     		}	
     		
@@ -428,6 +427,11 @@ public class Robot extends IterativeRobot
     	
 	
     }
+    /**
+     * 
+     * @param tiltAngle Angle to tilt the shooter to. This should be calculated in cameraTeleop()
+     * @param teleopMode
+     */
     public void shooterTeleop(double tiltAngle, FunctionalityMode teleopMode)
     {
     	if(teleopMode == FunctionalityMode.Competition)
@@ -436,6 +440,8 @@ public class Robot extends IterativeRobot
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+	    	//Only tilt if the shooter is clear from the chassis
+	    	
 	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
 	    	{
 	    		flywheel.tilt(tiltAngle);
@@ -446,7 +452,6 @@ public class Robot extends IterativeRobot
 	    	}
 	    	if(fire)
 	    	{
-	    		//TODO: integrate vision processing, figure out elevateMagnitude
 	    		flywheel.fire(FIRE_SPEED, ELEVATION_MAX, tiltAngle, FEED_SPEED);
 	    	}
 	    	else
@@ -459,6 +464,7 @@ public class Robot extends IterativeRobot
 	    		{
 	    			elevatorPosition += ELEVATE_DOWN_SPEED;
 	    		}
+	    		
 	    		//Stop the wheels spinning and set the elevation and tilt to the specified amounts
     			flywheel.endFire(elevatorPosition, tiltAngle);
 
