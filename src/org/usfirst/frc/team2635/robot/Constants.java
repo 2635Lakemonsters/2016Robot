@@ -77,33 +77,38 @@ public final class Constants
 		static  String SHOOTER_KEY_I = "Shooter I";
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
-		static  double SHOOTER_P_DEFAULT = 0.0;
-		static  double SHOOTER_I_DEFAULT = 0.0;
-		static  double SHOOTER_D_DEFAULT = 0.0;
+		static double SHOOTER_P_DEFAULT = 0.0;
+		static double SHOOTER_I_DEFAULT = 0.0;
+		static double SHOOTER_D_DEFAULT = 0.0;
 	
-		static  int RIGHT_FLYWHEEL_CHANNEL = 10;
-		static  int LEFT_FLYWHEEL_CHANNEL = 7;
+		static int RIGHT_FLYWHEEL_CHANNEL = 10;
+		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
-		static  int TILT_CHANNEL = 9;
+		static int TILT_CHANNEL = 9;
 		
-		static  int RIGHT_ELEVATOR_CHANNEL = 13;
-		static  int LEFT_ELEVATOR_CHANNEL = 12;
+		static int RIGHT_ELEVATOR_CHANNEL = 13;
+		static int LEFT_ELEVATOR_CHANNEL = 12;
 		
-		static  int FEED_CHANNEL = 11;
+		static int FEED_CHANNEL = 11;
 		
-		static  double FIRE_SPEED = 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
-		static  double FEED_SPEED = 0.5;
+		static double FIRE_SPEED; //= 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
+		static double FEED_SPEED; //0.5;
 		
-		static  double LOAD_FRONT_SPEED = -0.5; //TODO: If speed mode implemented, multiply this by speed scaler
+		static double LOAD_FRONT_SPEED = -0.5; //TODO: If speed mode implemented, multiply this by speed scaler
 		//static  double LOAD_BACK_SPEED = 0.5;
 		
-		static  double ELEVATE_UP_SPEED = 0.7;
-		static  double ELEVATE_DOWN_SPEED = -0.7;
+		static double ELEVATE_UP_SPEED;// = 0.7;
+		static double ELEVATE_DOWN_SPEED;// = -0.7;
 		
 		static double elevatorPosition = 0.0;
+		static double debugTiltPosition = 0.0;
 		
-		static  double TILT_MAX = 1.0; //TODO: Find maximum tilt distance;
-		static  double ELEVATION_MAX = 0.0; //TODO: Find maximum elevation distance
+		static double TILT_MAX = 1.0; //TODO: Find maximum tilt distance;
+		static double TILT_RESTING = 0.0;
+		
+		static double ELEVATION_MAX = 0.0; //TODO: Find maximum elevation distance
+		static double ELEVATION_ABOVE_CHASSIS = 0.0;
+		
 		static double ELEVATION_ERROR = 5.0;
 		static double SHOOTER_ERROR = 10.0;
 		static double TILT_ERROR = 3.0;
@@ -113,13 +118,12 @@ public final class Constants
 		static  int FIRE_BUTTON = 1;
 		static  int LOAD_FRONT_BUTTON = 2;
 		//static  int LOAD_BACK_BUTTON = 4;
-		static  int ELEVATE_UP_BUTTON = 10;
-		static  int ELEVATE_DOWN_BUTTON = 11;
+		static  int ELEVATE_UP_BUTTON = 11;
+		static  int ELEVATE_DOWN_BUTTON = 10;
 	}
 	public static class Climber
 	{
-		static  int LEFT_CLIMBER_CHANNEL = 14;
-		static  int RIGHT_CLIMBER_CHANNEL = 15;
+		static  int CLIMBER_CHANNEL = 14;
 		
 		static  String CLIMBER_KEY_P = "Climber P";
 		static  String CLIMBER_KEY_I = "Climber I";

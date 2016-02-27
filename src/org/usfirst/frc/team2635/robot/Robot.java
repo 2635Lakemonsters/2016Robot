@@ -2,6 +2,7 @@
 package org.usfirst.frc.team2635.robot;
 
 import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
+import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedSingle;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 import org.usfirst.frc.team2635.modules.Flywheel;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import static org.usfirst.frc.team2635.robot.Constants.Drive.*;
@@ -53,9 +55,11 @@ public class Robot extends IterativeRobot
 	enum FunctionalityMode
 	{
 		Competition, //More position
-		Debug //More vbus
+		Debug_Vbus, //More vbus
+		Debug_Encoder
 	}
-	FunctionalityMode runMode = FunctionalityMode.Debug;
+	FunctionalityMode runMode = FunctionalityMode.Debug_Vbus;
+	
 //See Constants.java for constants
 //VARIABLES
 	//DRIVE VARIABLES
@@ -111,7 +115,7 @@ public class Robot extends IterativeRobot
      */
 	public void driveInit(FunctionalityMode setupMode)
 	{
-		if(setupMode == FunctionalityMode.Competition)
+		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
 		{
 			//TODO: might have to invert the output for some of these. There is a function to do that in CANTalon
 	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
@@ -137,9 +141,10 @@ public class Robot extends IterativeRobot
 			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
 	    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
 	    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+	    	
 			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
 		}
-		else if(setupMode == FunctionalityMode.Debug)
+		else if(setupMode == FunctionalityMode.Debug_Vbus)
 		{
 			//Default vbus mode
 	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
@@ -156,15 +161,19 @@ public class Robot extends IterativeRobot
 	}
     public void shooterInit(FunctionalityMode setupMode)
     {
-    	if(setupMode == FunctionalityMode.Competition)
+    	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
     	{
-    		//10 Ticks per 20ms
-    		ELEVATE_DOWN_SPEED = -10.0;
-    		ELEVATE_UP_SPEED = 10.0;
+    		//1 encoder tick per 20ms
+    		ELEVATE_DOWN_SPEED = -1.0;
+    		ELEVATE_UP_SPEED = 1.0;
+    		
+    		FIRE_SPEED = 500; //TODO: Get actual max speed estimate
 	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+	    	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	
 	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+	    	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	
 	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
@@ -193,18 +202,20 @@ public class Robot extends IterativeRobot
 	    			new ActuatorSimple(rightElevatorMotor),
 	    			new ActuatorSimple(tiltMotor));
     	}
-    	else if(setupMode == FunctionalityMode.Debug)
+    	else if(setupMode == FunctionalityMode.Debug_Vbus)
     	{
-    		ELEVATE_UP_SPEED = 0.7;
-    		ELEVATE_DOWN_SPEED = -0.7;
+    		ELEVATE_UP_SPEED = 0.5;
+    		ELEVATE_DOWN_SPEED = -0.3;
+    		FIRE_SPEED = 1.0;
 	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
 	    	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
+	    	rightFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+	    	rightFlywheelMotor.enable();
 	    	
 	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
 	    	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
 	    	
 	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
-	    	
 	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
 	    	leftElevatorMotor.changeControlMode(TalonControlMode.Follower);
 	    	leftElevatorMotor.set(RIGHT_ELEVATOR_CHANNEL);
@@ -223,19 +234,20 @@ public class Robot extends IterativeRobot
 	    			new ActuatorSimple(tiltMotor));
 
     	}
-    		
+		FEED_SPEED = FIRE_SPEED / 2.5;
+	
     }
 	public void climberInit(FunctionalityMode setupMode)
 	{
-		if(setupMode == FunctionalityMode.Competition)
+		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
 		{
-			climberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
+			climberMotor = new CANTalon(CLIMBER_CHANNEL);
 			climberMotor.changeControlMode(TalonControlMode.Position);
 			climberMotor.setPID(CLIMBER_P_DEFAULT, CLIMBER_I_DEFAULT, CLIMBER_D_DEFAULT);
 		}
-		else if(setupMode == FunctionalityMode.Debug)
+		else if(setupMode == FunctionalityMode.Debug_Vbus)
 		{
-			climberMotor = new CANTalon(RIGHT_CLIMBER_CHANNEL);
+			climberMotor = new CANTalon(CLIMBER_CHANNEL);
 		}
     	
     	climbUpOneShot = new SensorOneShot(false);
@@ -271,7 +283,7 @@ public class Robot extends IterativeRobot
 	}
 	public void smartDashboardInit(FunctionalityMode setupMode)
 	{
-		if(setupMode == FunctionalityMode.Competition)
+		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
 		{
 			SmartDashboard.putBoolean(AUTO_KEY, true);
 			//PIDPIDPIDPIDPIDPIDPID
@@ -352,7 +364,7 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    	if(runMode == FunctionalityMode.Competition)
+    	if(runMode == FunctionalityMode.Competition || runMode == FunctionalityMode.Debug_Encoder)
     	{
 	    	frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
 	    	frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
@@ -366,7 +378,6 @@ public class Robot extends IterativeRobot
 			climberMotor.setPID(SmartDashboard.getNumber(CLIMBER_KEY_P),SmartDashboard.getNumber(CLIMBER_KEY_I), SmartDashboard.getNumber(CLIMBER_KEY_D));
 			
 			rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
-			leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
     	}
 	    
     }
@@ -425,7 +436,14 @@ public class Robot extends IterativeRobot
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
-	    	
+	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
+	    	{
+	    		flywheel.tilt(tiltAngle);
+	    	}
+	    	else
+	    	{
+	    		flywheel.tilt(TILT_RESTING);
+	    	}
 	    	if(fire)
 	    	{
 	    		//TODO: integrate vision processing, figure out elevateMagnitude
@@ -457,7 +475,7 @@ public class Robot extends IterativeRobot
 	
 	    	
     	}
-    	else if(teleopMode == FunctionalityMode.Debug)
+    	else if(teleopMode == FunctionalityMode.Debug_Vbus)
     	{
     		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
@@ -482,7 +500,6 @@ public class Robot extends IterativeRobot
 	    	{
 	    		flywheel.elevate(ELEVATE_DOWN_SPEED);
 	    	}
-	    
 	    	else if(tiltUp)
 	    	{
 	    		flywheel.tilt(1.0);
@@ -495,9 +512,50 @@ public class Robot extends IterativeRobot
 	    	{
 	    		flywheel.endFire(0.0, 0.0);
 	    	}
+	    	 	
+    	}
+    	else if(teleopMode == FunctionalityMode.Debug_Encoder)
+    	{
+	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
+	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
+	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+    		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+	    	boolean tiltUp = rightJoystick.getRawButton(6);
+	    	boolean tiltDown = rightJoystick.getRawButton(7);
 	    	
-
+	    	if(fire)
+	    	{
+	    		flywheel.wheel(-FIRE_SPEED);
+	    	}
+	    	else if(loadFront)
+	    	{
+	    		flywheel.loadFront(FEED_SPEED);
+	    	}	    
 	    	
+    		if(elevateUp)
+    		{
+    			elevatorPosition += ELEVATE_UP_SPEED;
+    		}
+    		else if(elevateDown)
+    		{
+    			elevatorPosition += ELEVATE_DOWN_SPEED;
+    		}	    	
+    	
+    		else if(tiltUp)
+	    	{
+	    		debugTiltPosition += 1.0;
+	    	}
+	    	else if(tiltDown)
+	    	{
+	    		debugTiltPosition += -1.0;
+	    	}
+	    	else
+	    	{
+	    		flywheel.endFire(elevatorPosition, debugTiltPosition);
+	    	}
+	    	 	
+	    	
+	
     	}
     }
     public void driveTeleop()
@@ -510,7 +568,7 @@ public class Robot extends IterativeRobot
     public void climberTeleop(FunctionalityMode teleopMode)
     {
 		
-		if(teleopMode == FunctionalityMode.Competition)
+		if(teleopMode == FunctionalityMode.Competition || teleopMode == FunctionalityMode.Debug_Encoder)
 		{
 			boolean climbUp = (Boolean) climbUpOneShot.sense(leftJoystick.getRawButton(CLIMB_UP_BUTTON));
 			boolean climbDown = (Boolean) climbDownOneShot.sense(leftJoystick.getRawButton(CLIMB_DOWN_BUTTON));
@@ -526,7 +584,7 @@ public class Robot extends IterativeRobot
 	    	}
 	    	climber.actuate(CLIMBER_POSITIONS[climberIndex]);
 		}
-		else if(teleopMode == FunctionalityMode.Debug)
+		else if(teleopMode == FunctionalityMode.Debug_Vbus)
 		{
 			boolean climbUp = leftJoystick.getRawButton(CLIMB_UP_BUTTON);
 			boolean climbDown = leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
@@ -550,9 +608,11 @@ public class Robot extends IterativeRobot
     {
     	//DEBUG
     	
-    		//SmartDashboard.putNumber("Tilt Encoder", tiltMotor.getPosition());
-    		//SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition());
-    		SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
+    		SmartDashboard.putData("Tilt Encoder", tiltMotor); //TODO: Max Tilt:
+    		SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition()); //TODO: Max Elevation:
+    		SmartDashboard.putData("Right wheel encoder", rightFlywheelMotor); //TODO: Max Speed:
+    		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getPosition());
+    		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
     		
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
