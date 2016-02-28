@@ -30,6 +30,8 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.vision.USBCamera;
+
 import static org.usfirst.frc.team2635.robot.Constants.Drive.*;
 import static org.usfirst.frc.team2635.robot.Constants.Camera.*;
 import static org.usfirst.frc.team2635.robot.Constants.Climber.*;
@@ -101,6 +103,7 @@ public class Robot extends IterativeRobot
 		SensorUnwrapper angleUnwrapper;
 		ImageGrabber camera;
 		PIDController cameraXPID;
+		USBCamera cam0;
 		boolean cameraExists = false;
 	//END CAMERA VARIABLES
 		
@@ -137,7 +140,6 @@ public class Robot extends IterativeRobot
 			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
 	    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
 	    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
-	    	
 			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
 		}
 		else if(setupMode == FunctionalityMode.Debug_Vbus)
@@ -256,13 +258,16 @@ public class Robot extends IterativeRobot
 	}
 	public void cameraInit(FunctionalityMode setupMode)
 	{
-		
     	navx = new AHRS(SerialPort.Port.kMXP);
     	
     	//TODO: The navx is mounted vertically rather than horizontally, so this may not get the angle correctly
       	angleUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
       	try
       	{
+      		//use cam0 to change properties of the camera such as FPS, exposure, etc.
+    		cam0 = new USBCamera("cam0");
+    		
+
       		int session = NIVision.IMAQdxOpenCamera("cam0",
                 NIVision.IMAQdxCameraControlMode.CameraControlModeController);
       		camera = new ImageGrabber(session, true);
