@@ -2,6 +2,7 @@
 package org.usfirst.frc.team2635.robot;
 
 import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
+import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 import org.usfirst.frc.team2635.modules.Flywheel;
@@ -26,9 +27,11 @@ import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.vision.USBCamera;
 
@@ -93,7 +96,8 @@ public class Robot extends IterativeRobot
 		
 		CANTalon rightElevatorMotor;
 		CANTalon leftElevatorMotor;
-		
+		Encoder tiltEncoder;
+		PIDController tiltPID;
 		CANTalon tiltMotor;
 		
 	//END SHOOTER VARIABLES
@@ -215,6 +219,8 @@ public class Robot extends IterativeRobot
 	    	
 	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
 	    	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
+	    	leftFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+	    	leftFlywheelMotor.enable();
 	    	
 	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
 	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
@@ -226,17 +232,19 @@ public class Robot extends IterativeRobot
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
 	    	
 	    	flywheel = new Flywheel(
-	    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
 	    			/*new ActuatorSimple(feedMotor), */
 	    			new ActuatorSimple(feedMotor), 
-	    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
 	    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), 
 	    			new ActuatorSimple(rightElevatorMotor),
 	    			new ActuatorSimple(tiltMotor));
 
     	}
 		FEED_SPEED = FIRE_SPEED / 2.5;
-	
+		tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
+		tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
+
     }
 	public void climberInit(FunctionalityMode setupMode)
 	{
@@ -619,10 +627,14 @@ public class Robot extends IterativeRobot
     {
     	//DEBUG
     	
-    		SmartDashboard.putData("Tilt Encoder", tiltMotor); //TODO: Max Tilt:
-    		SmartDashboard.putNumber("Elevator Encoder", rightElevatorMotor.getPosition()); //TODO: Max Elevation:
-    		SmartDashboard.putData("Right wheel encoder", rightFlywheelMotor); //TODO: Max Speed:
-    		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getPosition());
+    		SmartDashboard.putNumber("Tilt Encoder", tiltEncoder.getDistance()); //TODO: Max Tilt:
+    		SmartDashboard.putNumber("Elevator Encoder Right", rightElevatorMotor.getPosition()); //TODO: Max Elevation:
+    		SmartDashboard.putNumber("Elevator encoder left", leftElevatorMotor.getPosition());
+    		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getSpeed());
+    		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());
+    		
+    		SmartDashboard.putNumber("Drive Encoder Left", midLeftMotor.getSpeed());
+    		SmartDashboard.putNumber("Drive encoder right", midRightMotor.getSpeed());
     		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
     		

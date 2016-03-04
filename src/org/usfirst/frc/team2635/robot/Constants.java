@@ -85,6 +85,8 @@ public final class Constants
 		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
 		static int TILT_CHANNEL = 9;
+		static int TILT_ENCODER_A = 0;
+		static int TILT_ENCODER_B = 1;
 		
 		static int RIGHT_ELEVATOR_CHANNEL = 13;
 		static int LEFT_ELEVATOR_CHANNEL = 12;
