@@ -30,8 +30,8 @@ public final class Constants
 		public static String DRIVE_KEY_I = "Drive I";
 		public static String DRIVE_KEY_D = "Drive D";
 		
-		public static double DRIVE_P_DEFAULT = 0.0;
-		public static double DRIVE_I_DEFAULT = 0.0;
+		public static double DRIVE_P_DEFAULT = 0.2;
+		public static double DRIVE_I_DEFAULT = 0.001;
 		public static double DRIVE_D_DEFAULT = 0.0;
 		
 		public double speedModeScaler = 1000.0;
@@ -50,8 +50,8 @@ public final class Constants
 	    static  double CAMERA_X_I_DEFAULT = 0.0006;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
 
-		static  double CAMERA_Y_P_DEFAULT = 0.0;
-		static  double CAMERA_Y_I_DEFAULT = 0.0;
+		static  double CAMERA_Y_P_DEFAULT = 0.015;
+		static  double CAMERA_Y_I_DEFAULT = 0.001;
 		static  double CAMERA_Y_D_DEFAULT = 0.0;
 		
 		static  double CAMERA_RESOLUTION_X = 680.0;
@@ -77,16 +77,16 @@ public final class Constants
 		static  String SHOOTER_KEY_I = "Shooter I";
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
-		static double SHOOTER_P_DEFAULT = 0.0;
-		static double SHOOTER_I_DEFAULT = 0.0;
+		static double SHOOTER_P_DEFAULT = 0.1;
+		static double SHOOTER_I_DEFAULT = 0.0001;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
 		static int RIGHT_FLYWHEEL_CHANNEL = 10;
 		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
 		static int TILT_CHANNEL = 9;
-		static int TILT_ENCODER_A = 0;
-		static int TILT_ENCODER_B = 1;
+		static int TILT_ENCODER_A = 1;
+		static int TILT_ENCODER_B = 0;
 		
 		static int RIGHT_ELEVATOR_CHANNEL = 13;
 		static int LEFT_ELEVATOR_CHANNEL = 12;
@@ -105,7 +105,7 @@ public final class Constants
 		static double elevatorPosition = 0.0;
 		static double debugTiltPosition = 0.0;
 		
-		static double TILT_MAX = 1.0; //TODO: Find maximum tilt distance;
+		static double TILT_MAX = 750.0; 
 		static double TILT_RESTING = 0.0;
 		
 		static double ELEVATION_MAX = 0.0; //TODO: Find maximum elevation distance
