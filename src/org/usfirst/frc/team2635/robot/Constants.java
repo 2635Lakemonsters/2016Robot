@@ -65,12 +65,14 @@ public final class Constants
 	}
 	public static class Shooter
 	{
+		static String REZERO_KEY = "Reset encoders";
+		
 		static  String ELEVATOR_KEY_P = "Elevator P";
 		static  String ELEVATOR_KEY_I = "Elevator I";
 		static  String ELEVATOR_KEY_D = "Elevator D";
 		
-		static  double ELEVATOR_P_DEFAULT = 0.0;
-		static  double ELEVATOR_I_DEFAULT = 0.0;
+		static  double ELEVATOR_P_DEFAULT = 0.15;
+		static  double ELEVATOR_I_DEFAULT = 0.0001;
 		static  double ELEVATOR_D_DEFAULT = 0.0;
 
 		static  String SHOOTER_KEY_P = "Shooter P";
@@ -108,12 +110,12 @@ public final class Constants
 		static double TILT_MAX = 750.0; 
 		static double TILT_RESTING = 0.0;
 		
-		static double ELEVATION_MAX = 0.0; //TODO: Find maximum elevation distance
-		static double ELEVATION_ABOVE_CHASSIS = 0.0;
+		static double ELEVATION_MAX = 45000.0; 
+		static double ELEVATION_ABOVE_CHASSIS = 10000.0;
 		
-		static double ELEVATION_ERROR = 5.0;
-		static double SHOOTER_ERROR = 10.0;
-		static double TILT_ERROR = 3.0;
+		static double ELEVATION_ERROR = 1000.0;
+		static double SHOOTER_ERROR = 3000.0;
+		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
 		static  int AIM_BUTTON = 3;

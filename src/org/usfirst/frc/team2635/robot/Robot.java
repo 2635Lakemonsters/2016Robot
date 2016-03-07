@@ -3,6 +3,7 @@ package org.usfirst.frc.team2635.robot;
 
 import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
 import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
+import org.usfirst.frc.team2635.modules.ActuatorTwoMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 import org.usfirst.frc.team2635.modules.Flywheel;
@@ -32,6 +33,7 @@ import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.Encoder;
@@ -42,6 +44,8 @@ import static org.usfirst.frc.team2635.robot.Constants.Drive.*;
 import static org.usfirst.frc.team2635.robot.Constants.Camera.*;
 import static org.usfirst.frc.team2635.robot.Constants.Climber.*;
 import static org.usfirst.frc.team2635.robot.Constants.Shooter.*;
+
+import java.net.NetworkInterface;
 
 import static org.usfirst.frc.team2635.robot.Constants.Autonomous.*;
 
@@ -62,7 +66,7 @@ public class Robot extends IterativeRobot
 		Debug_Vbus, //More vbus
 		Debug_Encoder
 	}
-	FunctionalityMode runMode = FunctionalityMode.Debug_Encoder;
+	FunctionalityMode runMode = FunctionalityMode.Competition;
 	
 //See Constants.java for constants
 //VARIABLES
@@ -169,10 +173,10 @@ public class Robot extends IterativeRobot
     	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
     	{
     		//1 encoder tick per 20ms
-    		ELEVATE_DOWN_SPEED = -1.0;
-    		ELEVATE_UP_SPEED = 1.0;
+    		ELEVATE_DOWN_SPEED = -100.0;
+    		ELEVATE_UP_SPEED = 100.0;
     		
-    		FIRE_SPEED = 50000.0;
+    		FIRE_SPEED = -50000.0;
 	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
 	    	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
@@ -182,31 +186,41 @@ public class Robot extends IterativeRobot
 	    	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	leftFlywheelMotor.reverseSensor(true);
-
+	    	
 	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
 	    	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
+	    	rightElevatorMotor.reverseSensor(true);
 	    	rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
 	    	
 	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
-	    	leftElevatorMotor.changeControlMode(TalonControlMode.Follower);
-	    	leftElevatorMotor.set(RIGHT_ELEVATOR_CHANNEL);
+	    	leftElevatorMotor.changeControlMode(TalonControlMode.Position);
+	    	leftElevatorMotor.reverseSensor(true);
+	    	leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+
 	    	
 	    	tiltMotor = new CANTalon(TILT_CHANNEL);
-	    
+			tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
+			tiltEncoder.reset();
+			tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
+			tiltPID.enable();
+			
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
+    		rightElevatorMotor.setPosition(0.0);
+    		leftElevatorMotor.setPosition(0.0);
+
 	    	if(setupMode == FunctionalityMode.Competition)
 	    	{
 		    	flywheel = new Flywheel(
-		    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
 		    			new ActuatorSimple(feedMotor), 
-		    			new ActuatorLauncherFeed(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
 		    			new SensorThreeAND(
 		    					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
 		    					new SensorHitTest(new SensorCANTalonPIDError(rightElevatorMotor), ELEVATION_ERROR, -ELEVATION_ERROR),
 		    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
 		    			),
-		    			new ActuatorSimple(rightElevatorMotor),
-		    			new ActuatorSimple(tiltMotor)
+		    			new ActuatorTwoMotor(leftElevatorMotor, rightElevatorMotor),
+		    			new ActuatorClosedLoop(tiltPID)
 		    	
 		    	);
 	    	}
@@ -261,10 +275,7 @@ public class Robot extends IterativeRobot
 	    			new ActuatorSimple(tiltMotor));
 
     	}
-		FEED_SPEED = FIRE_SPEED / 2.5;
-		tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
-		tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
-		tiltPID.enable();
+		FEED_SPEED = -FIRE_SPEED / 2.5;
 
     }
 	public void climberInit(FunctionalityMode setupMode)
@@ -318,7 +329,10 @@ public class Robot extends IterativeRobot
 	{
 		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
 		{
+			NetworkTable.flush();
 			SmartDashboard.putBoolean(AUTO_KEY, true);
+			SmartDashboard.putBoolean(REZERO_KEY, false);
+			
 			//PIDPIDPIDPIDPIDPIDPID
 	    	SmartDashboard.putNumber(DRIVE_KEY_P, DRIVE_P_DEFAULT);
 	    	SmartDashboard.putNumber(DRIVE_KEY_I, DRIVE_I_DEFAULT);
@@ -350,15 +364,13 @@ public class Robot extends IterativeRobot
     @Override
 	public void robotInit() 
     {
-    
+    	
 	    //if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
 	    smartDashboardInit(runMode);
     	driveInit(FunctionalityMode.Debug_Vbus);	
 	    shooterInit(runMode);
 	    //climberInit();
 	    cameraInit(runMode);
-	    LiveWindow.addActuator("Right Flywheel", RIGHT_FLYWHEEL_CHANNEL, rightFlywheelMotor);
-	    LiveWindow.run();
     }
     
     
@@ -399,7 +411,12 @@ public class Robot extends IterativeRobot
     {
     	if(runMode == FunctionalityMode.Competition || runMode == FunctionalityMode.Debug_Encoder)
     	{
-    		
+    		if(SmartDashboard.getBoolean(REZERO_KEY))
+    		{
+    			tiltEncoder.reset();
+    			rightElevatorMotor.setPosition(0);
+    			leftElevatorMotor.setPosition(0);
+    		}
 	    	frontRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
 	    	frontLeftMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
 	 		
@@ -421,49 +438,58 @@ public class Robot extends IterativeRobot
      * 
      * @return Angle for tilter
      */
-    public double cameraTeleop()
+    public double cameraTeleop(FunctionalityMode teleopMode)
     {
-    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
-    	//TODO: Tilt angle is currently set to just always be manually set
-    	//Transform [-1,1] to [0,1]
-    	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
-    	if(findTargetAngle && cameraExists)
+    	if(teleopMode == FunctionalityMode.Competition)
     	{
-    		//Need to find angle based upon a fully elevated shooter.
-    		flywheel.elevate(ELEVATION_MAX);
-    		//TODO: May want to wrap this logic into a couple of modules and put them in the PIDDrive class. Do this after basic functionality is established
-    		//TODO: Will probably want to add some logic to block untill the flywheel is elevated
-    		if(!cameraXPID.isEnabled())
-    		{
-    			
-    			NIVision.PointDouble angleToTarget = angleToTargetGrabber.sense(camera.getImage());
-    			
-    			SmartDashboard.putNumber("Angle to target X", angleToTarget.x);
-    			SmartDashboard.putNumber("Angle to target Y", angleToTarget.y);
-    			tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
-    			cameraXPID.setPID(SmartDashboard.getNumber(CAMERA_X_KEY_P), SmartDashboard.getNumber(CAMERA_X_KEY_I), SmartDashboard.getNumber(CAMERA_X_KEY_D));
-    			cameraXPID.setSetpoint(angleToTarget.x);
-    			//PID will drive for us
-    			cameraXPID.enable();
-    			//Tilt angle is ratio between the angle to the target and the maximum angle the camera can see, scaled by the maximum tilt
-    			//TODO: Need to find TILT_MAX
-    			tiltAngle = (angleToTarget.y / CAMERA_VIEW_ANGLE) * TILT_MAX;
-    		}	
-    		
-        	
+	    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
+	    	//TODO: Tilt angle is currently set to just always be manually set
+	    	//Transform [-1,1] to [0,1]
+	    	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
+	    	if(findTargetAngle && cameraExists)
+	    	{
+	    		//Need to find angle based upon a fully elevated shooter.
+	    		flywheel.elevate(ELEVATION_MAX);
+	    		//TODO: May want to wrap this logic into a couple of modules and put them in the PIDDrive class. Do this after basic functionality is established
+	    		//TODO: Will probably want to add some logic to block untill the flywheel is elevated
+	    		if(!cameraXPID.isEnabled())
+	    		{
+	    			
+	    			NIVision.PointDouble angleToTarget = angleToTargetGrabber.sense(camera.getImage());
+	    			
+	    			SmartDashboard.putNumber("Angle to target X", angleToTarget.x);
+	    			SmartDashboard.putNumber("Angle to target Y", angleToTarget.y);
+	    			//tiltMotor.setPID(SmartDashboard.getNumber(CAMERA_Y_KEY_P), SmartDashboard.getNumber(CAMERA_Y_KEY_I), SmartDashboard.getNumber(CAMERA_Y_KEY_D));
+	    			cameraXPID.setPID(SmartDashboard.getNumber(CAMERA_X_KEY_P), SmartDashboard.getNumber(CAMERA_X_KEY_I), SmartDashboard.getNumber(CAMERA_X_KEY_D));
+	    			cameraXPID.setSetpoint(angleToTarget.x);
+	    			//PID will drive for us
+	    			cameraXPID.enable();
+	    			//Tilt angle is ratio between the angle to the target and the maximum angle the camera can see, scaled by the maximum tilt
+	    			//TODO: Need to find TILT_MAX
+	    			tiltAngle = (angleToTarget.y / CAMERA_VIEW_ANGLE) * TILT_MAX;
+	    		}	
+	    		
+	        	
+	    	}
+	    	else
+	    	{
+	    		if(cameraXPID.isEnabled())
+	    		{
+	    			//Prevent PID from screwing with normal driving
+	    			cameraXPID.disable();
+	    		}
+	
+	    	}	
+	    	return tiltAngle;
+	    	
     	}
     	else
     	{
-    		if(cameraXPID.isEnabled())
-    		{
-    			//Prevent PID from screwing with normal driving
-    			cameraXPID.disable();
-    		}
-
+	    	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
+	    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
+	    	flywheel.elevate(ELEVATION_MAX);
+	    	return tiltAngle;
     	}
-    	return tiltAngle;
-    	
-	
     }
     /**
      * 
@@ -478,44 +504,45 @@ public class Robot extends IterativeRobot
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
+	    	boolean aim = rightJoystick.getRawButton(AIM_BUTTON);
 	    	//Only tilt if the shooter is clear from the chassis
 	    	
-	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
-	    	{
-	    		flywheel.tilt(tiltAngle);
-	    	}
-	    	else
-	    	{
-	    		flywheel.tilt(TILT_RESTING);
-	    	}
+	    	flywheel.tilt(tiltAngle);
+	    	SmartDashboard.putNumber("tiltAngle", tiltAngle);
+	    	
 	    	if(fire)
 	    	{
 	    		flywheel.fire(FIRE_SPEED, ELEVATION_MAX, tiltAngle, FEED_SPEED);
 	    	}
 	    	else
 	    	{
-	    		if(elevateUp)
+	    		if(elevateUp && elevatorPosition < ELEVATION_MAX)
 	    		{
 	    			elevatorPosition += ELEVATE_UP_SPEED;
 	    		}
-	    		else if(elevateDown)
+	    		else if(elevateDown && elevatorPosition > 0)
 	    		{
 	    			elevatorPosition += ELEVATE_DOWN_SPEED;
 	    		}
-	    		
+	    		if(aim)
+	    		{
+	    			elevatorPosition = ELEVATION_MAX;
+	    		}
+	    		flywheel.elevate(elevatorPosition);
 	    		//Stop the wheels spinning and set the elevation and tilt to the specified amounts
-    			flywheel.endFire(elevatorPosition, tiltAngle);
+    			
+    			if(loadFront)
+    	    	{
+    	    		flywheel.loadFront(FEED_SPEED);
+    	    	}
+    			else
+    			{
+    				flywheel.loadFront(0.0);
+    			}
+    		
 
 	    	}
-	    	if(loadFront)
-	    	{
-	    		flywheel.loadFront(LOAD_FRONT_SPEED);
-	    	}
-	    	else
-	    	{
-	    		flywheel.loadFront(0.0);
-	    	}
-	    	
+	    		    	
 	
 	    	
     	}
@@ -657,22 +684,17 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putNumber("Elevator Encoder Right", rightElevatorMotor.getPosition()); //TODO: Max Elevation:
     		SmartDashboard.putNumber("Elevator encoder left", leftElevatorMotor.getPosition());
     		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getSpeed());
-    		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());
-    		SmartDashboard.putNumber("Right Shooter Voltage", rightFlywheelMotor.getOutputVoltage());
-    		SmartDashboard.putNumber("Left Shooter Voltage", leftFlywheelMotor.getOutputVoltage());
-    		SmartDashboard.putNumber("Right Shooter Error", rightFlywheelMotor.getError());
-    		SmartDashboard.putNumber("Left Shooter Error", leftFlywheelMotor.getError());
+    		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());    		
     		
-    		SmartDashboard.putNumber("Drive Encoder Left", midLeftMotor.getSpeed());
-    		SmartDashboard.putNumber("Drive encoder right", midRightMotor.getSpeed());
     		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
     		
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
     		//As a result, cameraTeleop must always be run before shooterTeleop
     		//double tiltAngle = cameraTeleop();
-    		double tiltAngle = 0.0;
-    		shooterTeleop(tiltAngle, runMode);
+    	 	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
+    	    
+    		//shooterTeleop(tiltAngle, runMode);
     		
     		driveTeleop();
     		//climberTeleop(runMode);
