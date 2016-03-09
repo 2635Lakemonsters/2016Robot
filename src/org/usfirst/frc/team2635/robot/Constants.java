@@ -33,7 +33,8 @@ public final class Constants
 		public static double DRIVE_P_DEFAULT = 0.2;
 		public static double DRIVE_I_DEFAULT = 0.001;
 		public static double DRIVE_D_DEFAULT = 0.0;
-		
+		public static int VOLTAGE_MODE_BUTTON = 8;
+		public static int SPEED_MODE_BUTTON = 9;
 		public double speedModeScaler = 1000.0;
 	}
 	public static class Camera
@@ -66,6 +67,14 @@ public final class Constants
 	public static class Shooter
 	{
 		static String REZERO_KEY = "Reset encoders";
+		/**
+		 * Left Joystick
+		 */
+		static int REZERO_BUTTON = 8;
+		/**
+		 * Left Joystick
+		 */
+		static int REZERO_INTERRUPT_BUTTON = 9;
 		
 		static  String ELEVATOR_KEY_P = "Elevator P";
 		static  String ELEVATOR_KEY_I = "Elevator I";
@@ -93,6 +102,11 @@ public final class Constants
 		static int RIGHT_ELEVATOR_CHANNEL = 13;
 		static int LEFT_ELEVATOR_CHANNEL = 12;
 		
+		static int LEFT_ELEVATOR_LIMIT_CHANNEL = 2;
+		static int RIGHT_ELEVATOR_LIMIT_CHANNEL = 3;
+		
+		static double REZERO_SPEED = -0.4;
+		
 		static int FEED_CHANNEL = 11;
 		
 		static double FIRE_SPEED; //= 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
@@ -105,13 +119,14 @@ public final class Constants
 		static double ELEVATE_DOWN_SPEED;// = -0.7;
 		
 		static double elevatorPosition = 0.0;
+		static boolean elevatorState = false;
 		static double debugTiltPosition = 0.0;
 		
 		static double TILT_MAX = 750.0; 
 		static double TILT_RESTING = 0.0;
 		
 		static double ELEVATION_MAX = 45000.0; 
-		static double ELEVATION_ABOVE_CHASSIS = 10000.0;
+		static double ELEVATION_ABOVE_CHASSIS = 25000.0;
 		
 		static double ELEVATION_ERROR = 1000.0;
 		static double SHOOTER_ERROR = 3000.0;

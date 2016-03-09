@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.vision.USBCamera;
@@ -96,6 +97,9 @@ public class Robot extends IterativeRobot
 	//SHOOTER VARIABLES
 		Flywheel flywheel;
 		
+		DigitalInput leftElevatorLimit;
+		DigitalInput rightElevatorLimit;
+		
 		CANTalon rightFlywheelMotor;
 		CANTalon leftFlywheelMotor;
 		
@@ -103,6 +107,9 @@ public class Robot extends IterativeRobot
 		
 		CANTalon rightElevatorMotor;
 		CANTalon leftElevatorMotor;
+		
+		SensorOneShot elevateOneShot;
+		
 		Encoder tiltEncoder;
 		PIDController tiltPID;
 		CANTalon tiltMotor;
@@ -123,119 +130,241 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+	public void driveConfigEncoder()
+	{
+		//TODO: Middle motor is driver
+    	rearRightMotor.changeControlMode(TalonControlMode.Follower);
+    	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
+    	
+    	midRightMotor.changeControlMode(TalonControlMode.Follower);
+    	midRightMotor.set(FRONT_RIGHT_CHANNEL);
+    	
+    	frontRightMotor.changeControlMode(TalonControlMode.Speed);
+    	frontRightMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+    	
+    	rearLeftMotor.changeControlMode(TalonControlMode.Follower);
+    	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
+    	
+    	midLeftMotor.changeControlMode(TalonControlMode.Follower);
+    	midLeftMotor.set(FRONT_LEFT_CHANNEL);
+    	
+    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
+    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+
+	}
+	public void driveConfigVbus()
+	{
+    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
+    	rearRightMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+    	midRightMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+    	frontRightMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+    	rearLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
+    	midLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
+    	frontLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+
+	}
 	public void driveInit(FunctionalityMode setupMode)
 	{
+    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
+    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
+		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
+
 		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
 		{
-			//TODO: might have to invert the output for some of these. There is a function to do that in CANTalon
-	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
-	    	rearRightMotor.changeControlMode(TalonControlMode.Follower);
-	    	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
-	    	
-	    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
-	    	midRightMotor.changeControlMode(TalonControlMode.Follower);
-	    	midRightMotor.set(FRONT_RIGHT_CHANNEL);
-	    	
-	    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
-	    	frontRightMotor.changeControlMode(TalonControlMode.Speed);
-	    	frontRightMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
-	    	
-	    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
-	    	rearLeftMotor.changeControlMode(TalonControlMode.Follower);
-	    	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
-	    	
-	    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
-	    	midLeftMotor.changeControlMode(TalonControlMode.Follower);
-	    	midLeftMotor.set(FRONT_LEFT_CHANNEL);
-	    	
-			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
-	    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
-	    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+			driveConfigEncoder();
 			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
 		}
 		else if(setupMode == FunctionalityMode.Debug_Vbus)
 		{
-			//Default vbus mode
-	    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
-	    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
-	    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
-	    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
-	    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
-			frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
+			driveConfigVbus();
 		}
 		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
     	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
     	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
 
 	}
-    public void shooterInit(FunctionalityMode setupMode)
-    {
-    	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
-    	{
+	public void shooterConfigVbus()
+	{
+
+		ELEVATE_UP_SPEED = 0.5;
+		ELEVATE_DOWN_SPEED = -0.3;
+		FIRE_SPEED = 1.0;
+		FEED_SPEED = -FIRE_SPEED / 2.5;
+
+    	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	rightFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	
+    	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	leftFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	
+    	rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	leftElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	tiltMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	tiltPID.disable();
+    	
+    	feedMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	
+    	flywheel = new Flywheel(
+    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+    			/*new ActuatorSimple(feedMotor), */
+    			new ActuatorSimple(feedMotor), 
+    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), 
+    			new ActuatorTwoMotor(leftElevatorMotor,rightElevatorMotor),
+    			new ActuatorSimple(tiltMotor));
+	}
+	public void shooterConfigEncoder(boolean rezeroEncoders)
+	{
+    	
     		//1 encoder tick per 20ms
-    		ELEVATE_DOWN_SPEED = -100.0;
-    		ELEVATE_UP_SPEED = 100.0;
-    		
+    		ELEVATE_DOWN_SPEED = -1000.0;
+    		ELEVATE_UP_SPEED = 1000.0;
     		FIRE_SPEED = -50000.0;
-	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+    		FEED_SPEED = -FIRE_SPEED / 2.5;
+
+    		
+	    	elevateOneShot = new SensorOneShot(false);
+    	
 	    	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	rightFlywheelMotor.reverseSensor(true);
     	
-	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
 	    	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	leftFlywheelMotor.reverseSensor(true);
 	    	
-	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
 	    	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
 	    	rightElevatorMotor.reverseSensor(true);
 	    	rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
 	    	
-	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
 	    	leftElevatorMotor.changeControlMode(TalonControlMode.Position);
 	    	leftElevatorMotor.reverseSensor(true);
 	    	leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
 
 	    	
-	    	tiltMotor = new CANTalon(TILT_CHANNEL);
-			tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
-			tiltEncoder.reset();
+	    	tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
+			if(rezeroEncoders)
+			{
+				tiltEncoder.reset();
+				rightElevatorMotor.setPosition(0.0);
+	    		leftElevatorMotor.setPosition(0.0);
+
+			}
+			
 			tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
 			tiltPID.enable();
 			
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
-    		rightElevatorMotor.setPosition(0.0);
-    		leftElevatorMotor.setPosition(0.0);
+    		
+	    	
+    		flywheel = new Flywheel(
+	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+	    			new ActuatorSimple(feedMotor), 
+	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+	    			new SensorThreeAND(
+	    					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
+	    					new SensorHitTest(new SensorCANTalonPIDError(rightElevatorMotor), ELEVATION_ERROR, -ELEVATION_ERROR),
+	    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
+	    			),
+	    			new ActuatorTwoMotor(leftElevatorMotor, rightElevatorMotor),
+	    			new ActuatorClosedLoop(tiltPID)
+	    	
+	    	);
+    	
+	    	
+	}
+	public void rezeroElevator()
+	{
+		shooterConfigVbus();
+		rightElevatorMotor.set(REZERO_SPEED);
+		leftElevatorMotor.set(REZERO_SPEED);
+		while(true)
+		{
+			//TODO: add in time limit for autonomous
+			//If the limit switches break, the robot could enter a broken state, so be able to exit rezeroing.
+			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
+			{
+				rightElevatorMotor.set(0.0);
+				leftElevatorMotor.set(0.0);
+				//Robot is in Vbus mode now.
+				return;
+			}
+			boolean leftLimitHit = !leftElevatorLimit.get();
+			boolean rightLimitHit = !rightElevatorLimit.get();
+			if(leftLimitHit)
+			{
+				leftElevatorMotor.set(0.0);
+				leftElevatorMotor.setPosition(0.0);
+			}
+			if(rightLimitHit)
+			{
+				rightElevatorMotor.set(0.0);
+				rightElevatorMotor.setPosition(0.0);
+			}
+			if(leftLimitHit && rightLimitHit)
+			{
+				break;
+			}
+		}
+		shooterConfigEncoder(false);
+	}
+    public void shooterInit(FunctionalityMode setupMode)
+    {
+    	//NOTE: Right and left limit are true when open
+    	leftElevatorLimit = new DigitalInput(LEFT_ELEVATOR_LIMIT_CHANNEL);
+    	rightElevatorLimit = new DigitalInput(RIGHT_ELEVATOR_LIMIT_CHANNEL);
+    	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
+    	{
+    		//1 encoder tick per 20ms
+    		ELEVATE_DOWN_SPEED = -1000.0;
+    		ELEVATE_UP_SPEED = 1000.0;
+    		
+    		FIRE_SPEED = -50000.0;
+	    	elevateOneShot = new SensorOneShot(false);
+    		rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+    	
+	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+	    	
+	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
+	    	
+	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
+
+	    	
+	    	tiltMotor = new CANTalon(TILT_CHANNEL);
+			
+	    	feedMotor = new CANTalon(FEED_CHANNEL);
 
 	    	if(setupMode == FunctionalityMode.Competition)
 	    	{
-		    	flywheel = new Flywheel(
-		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
-		    			new ActuatorSimple(feedMotor), 
-		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
-		    			new SensorThreeAND(
-		    					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
-		    					new SensorHitTest(new SensorCANTalonPIDError(rightElevatorMotor), ELEVATION_ERROR, -ELEVATION_ERROR),
-		    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
-		    			),
-		    			new ActuatorTwoMotor(leftElevatorMotor, rightElevatorMotor),
-		    			new ActuatorClosedLoop(tiltPID)
-		    	
-		    	);
+	    		shooterConfigEncoder(true);
 	    	}
-	    	if(setupMode == FunctionalityMode.Debug_Encoder)
-	    	{
-		    	flywheel = new Flywheel(
-		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
-		    			/*new ActuatorSimple(feedMotor), */
-		    			new ActuatorSimple(feedMotor), 
-		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
-		    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), 
-		    			new ActuatorSimple(rightElevatorMotor),
-		    			new ActuatorClosedLoop(tiltPID)
-		    			);
-	    	}
+//	    	if(setupMode == FunctionalityMode.Debug_Encoder)
+//	    	{
+//		    	flywheel = new Flywheel(
+//		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
+//		    			/*new ActuatorSimple(feedMotor), */
+//		    			new ActuatorSimple(feedMotor), 
+//		    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
+//		    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), 
+//		    			new ActuatorSimple(rightElevatorMotor),
+//		    			new ActuatorClosedLoop(tiltPID)
+//		    			);
+//	    	}
     	
 	    			//Prevent tilt motor from actuating below the chassis
 	    			//new ActuatorBlockingMotor(tiltMotor, new SensorHitTest(new SensorCANTalon(rightElevatorMotor), ELEVATION_MAX, ELEVATION_ABOVE_CHASSIS)));
@@ -243,39 +372,8 @@ public class Robot extends IterativeRobot
    
     	else if(setupMode == FunctionalityMode.Debug_Vbus)
     	{
-    		ELEVATE_UP_SPEED = 0.5;
-    		ELEVATE_DOWN_SPEED = -0.3;
-    		FIRE_SPEED = 1.0;
-	    	rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
-	    	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
-	    	rightFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-	    	rightFlywheelMotor.enable();
-	    	
-	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
-	    	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
-	    	leftFlywheelMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-	    	leftFlywheelMotor.enable();
-	    	
-	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
-	    	leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
-	    	leftElevatorMotor.changeControlMode(TalonControlMode.Follower);
-	    	leftElevatorMotor.set(RIGHT_ELEVATOR_CHANNEL);
-	    	
-	    	tiltMotor = new CANTalon(TILT_CHANNEL);
-	    	
-	    	feedMotor = new CANTalon(FEED_CHANNEL);
-	    	
-	    	flywheel = new Flywheel(
-	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
-	    			/*new ActuatorSimple(feedMotor), */
-	    			new ActuatorSimple(feedMotor), 
-	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
-	    			new SensorRawButton(LOAD_FRONT_BUTTON, rightJoystick), 
-	    			new ActuatorSimple(rightElevatorMotor),
-	    			new ActuatorSimple(tiltMotor));
-
+    		shooterConfigVbus();
     	}
-		FEED_SPEED = -FIRE_SPEED / 2.5;
 
     }
 	public void climberInit(FunctionalityMode setupMode)
@@ -498,18 +596,39 @@ public class Robot extends IterativeRobot
      */
     public void shooterTeleop(double tiltAngle, FunctionalityMode teleopMode)
     {
+    	if(leftJoystick.getRawButton(REZERO_BUTTON))
+    	{
+    		rezeroElevator();
+    	}
     	if(teleopMode == FunctionalityMode.Competition)
     	{
+    		//TODO: Might want to make this optional
+        	boolean leftElevatorLimitHit = !leftElevatorLimit.get();
+        	boolean rightElevatorLimitHit = !rightElevatorLimit.get();
+        	if(leftElevatorLimitHit)
+        	{
+        		leftElevatorMotor.setPosition(0.0);
+        	}
+        	if(rightElevatorLimitHit)
+        	{
+        		rightElevatorMotor.setPosition(0.0);
+        	}
+    		
 	    	boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
-	    	boolean aim = rightJoystick.getRawButton(AIM_BUTTON);
+	    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
 	    	//Only tilt if the shooter is clear from the chassis
 	    	
-	    	flywheel.tilt(tiltAngle);
-	    	SmartDashboard.putNumber("tiltAngle", tiltAngle);
-	    	
+	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
+	    	{
+	    		flywheel.tilt(tiltAngle);
+	    	}
+	    	else
+	    	{
+	    		flywheel.tilt(0.0);
+	    	}
 	    	if(fire)
 	    	{
 	    		flywheel.fire(FIRE_SPEED, ELEVATION_MAX, tiltAngle, FEED_SPEED);
@@ -526,7 +645,16 @@ public class Robot extends IterativeRobot
 	    		}
 	    		if(aim)
 	    		{
-	    			elevatorPosition = ELEVATION_MAX;
+	    			if(elevatorState == true)
+	    			{
+	    				elevatorPosition = 0;
+	    				elevatorState = false;
+	    			}
+	    			else
+	    			{
+	    				elevatorPosition = ELEVATION_MAX;
+	    				elevatorState = true;
+	    			}
 	    		}
 	    		flywheel.elevate(elevatorPosition);
 	    		//Stop the wheels spinning and set the elevation and tilt to the specified amounts
@@ -685,16 +813,31 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putNumber("Elevator encoder left", leftElevatorMotor.getPosition());
     		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getSpeed());
     		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());    		
+    		SmartDashboard.putNumber("Tilt setpoint", tiltPID.getSetpoint());
     		
+    		SmartDashboard.putBoolean("Left limit", leftElevatorLimit.get());
+    		SmartDashboard.putBoolean("Right limit", rightElevatorLimit.get());
     		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
-    		
+    		//TODO: Get drive working, add its config here
+    		if(rightJoystick.getRawButton(VOLTAGE_MODE_BUTTON))
+    		{
+    			runMode = FunctionalityMode.Debug_Vbus;
+    			shooterConfigVbus();
+    			
+    		}
+    		else if(rightJoystick.getRawButton(SPEED_MODE_BUTTON))
+    		{
+    			
+    			runMode = FunctionalityMode.Competition;
+    			shooterConfigEncoder(false);
+    		}
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
     		//As a result, cameraTeleop must always be run before shooterTeleop
     		//double tiltAngle = cameraTeleop();
     	 	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
     	    
-    		//shooterTeleop(tiltAngle, runMode);
+    		shooterTeleop(tiltAngle, runMode);
     		
     		driveTeleop();
     		//climberTeleop(runMode);
