@@ -662,8 +662,7 @@ public class Robot extends IterativeRobot
 	    	{
 	    		//Do a sanity check
 	    		//If the tilter is being elevated and the encoders aren't roughly matching that, something is seriously wrong.
-	    		//Tilt error is halved for more tolerance
-	    		if(tiltAngle >= TILT_ERROR && !(tiltEncoder.getDistance()  > TILT_ERROR / 2) )
+	    		if(tiltAngle <= -TILT_ERROR && !(tiltEncoder.getDistance() < 0.5) )
 	    		{
 	    			//TODO: Do something if there's a tilt fault
 	    			tiltFault = true;
@@ -683,7 +682,7 @@ public class Robot extends IterativeRobot
 	    	{
 	    	
 	    		flywheel.fire(FIRE_SPEED, ELEVATION_MAX, tiltAngle, FEED_SPEED);
-	    		if(!(leftFlywheelMotor.getSpeed() > SHOOTER_ERROR) || !(rightFlywheelMotor.getSpeed() > SHOOTER_ERROR))
+	    		if(!(leftFlywheelMotor.getSpeed() > 0.5) || !(rightFlywheelMotor.getSpeed() > 0.5))
 	    		{
 	    			shooterFault = true;
 	    		}
@@ -698,7 +697,7 @@ public class Robot extends IterativeRobot
 	    		if(elevatorPosition > 0)
 	    		{
 	    			//If the left or right elevator isn't returning the correct distance
-	    			if(!(rightElevatorMotor.getPosition() > ELEVATION_ERROR )|| !(leftElevatorMotor.getPosition() > ELEVATION_ERROR))
+	    			if(!(rightElevatorMotor.getPosition() > 0.5)|| !(leftElevatorMotor.getPosition() > 0.5))
 	    			{
 	    				elevatorFault = true;
 	    			}
@@ -734,7 +733,7 @@ public class Robot extends IterativeRobot
     			if(loadFront)
     	    	{
     	    		flywheel.loadFront(FEED_SPEED);
-    	    		if(!(leftFlywheelMotor.getSpeed() > SHOOTER_ERROR) || !(rightFlywheelMotor.getSpeed() > SHOOTER_ERROR))
+    	    		if(!(leftFlywheelMotor.getSpeed() > 0.5) || !(rightFlywheelMotor.getSpeed() > 0.5))
     	    		{
     	    			shooterFault = true;
     	    		}
