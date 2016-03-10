@@ -257,7 +257,6 @@ public class Robot extends IterativeRobot
 	    	leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
 
 	    	
-	    	tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
 			if(rezeroEncoders)
 			{
 				tiltEncoder.reset();
@@ -266,7 +265,6 @@ public class Robot extends IterativeRobot
 
 			}
 			
-			tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
 			tiltPID.enable();
 			
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
@@ -285,8 +283,7 @@ public class Robot extends IterativeRobot
 	    			new ActuatorClosedLoop(tiltPID)
 	    	
 	    	);
-    	
-	    	
+
 	}
 	public void rezeroElevator()
 	{
@@ -346,7 +343,9 @@ public class Robot extends IterativeRobot
 
 	    	
 	    	tiltMotor = new CANTalon(TILT_CHANNEL);
-			
+	    	tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
+			tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
+
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
 
 	    	if(setupMode == FunctionalityMode.Competition)
@@ -403,13 +402,12 @@ public class Robot extends IterativeRobot
       	try
       	{
       		//use cam0 to change properties of the camera such as FPS, exposure, etc.
-    		cam0 = new USBCamera("cam0");
     		
-
       		int session = NIVision.IMAQdxOpenCamera("cam0",
                 NIVision.IMAQdxCameraControlMode.CameraControlModeController);
       		camera = new ImageGrabber(session, true);
-      	
+      		
+      		
       		//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
       		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
       	
@@ -455,6 +453,8 @@ public class Robot extends IterativeRobot
 	    	SmartDashboard.putNumber(SHOOTER_KEY_P, SHOOTER_P_DEFAULT);
 	    	SmartDashboard.putNumber(SHOOTER_KEY_I, SHOOTER_I_DEFAULT);
 	    	SmartDashboard.putNumber(SHOOTER_KEY_D, SHOOTER_D_DEFAULT);
+	    	
+	    	SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
 		}
 		else{}
 
@@ -613,8 +613,8 @@ public class Robot extends IterativeRobot
         	{
         		rightElevatorMotor.setPosition(0.0);
         	}
-    		
-	    	boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
+        	
+    		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
@@ -817,6 +817,11 @@ public class Robot extends IterativeRobot
     		
     		SmartDashboard.putBoolean("Left limit", leftElevatorLimit.get());
     		SmartDashboard.putBoolean("Right limit", rightElevatorLimit.get());
+    		SmartDashboard.putNumber(ELEVATION_KEY, (rightElevatorMotor.getPosition() + leftElevatorMotor.getPosition()) / 2);
+	    	SmartDashboard.putNumber(TILT_KEY, tiltEncoder.getDistance());
+	    	SmartDashboard.putNumber(SHOOTER_SPEED_KEY, (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2);
+	    	
+
     		//SmartDashboard.putNumber("Unwrapped navx angle", angleUnwrapper.sense(null));
     	//END DEBUG
     		//TODO: Get drive working, add its config here
@@ -824,6 +829,7 @@ public class Robot extends IterativeRobot
     		{
     			runMode = FunctionalityMode.Debug_Vbus;
     			shooterConfigVbus();
+    			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_VBUS);
     			
     		}
     		else if(rightJoystick.getRawButton(SPEED_MODE_BUTTON))
@@ -831,6 +837,7 @@ public class Robot extends IterativeRobot
     			
     			runMode = FunctionalityMode.Competition;
     			shooterConfigEncoder(false);
+    			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
     		}
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
     		//As a result, cameraTeleop must always be run before shooterTeleop

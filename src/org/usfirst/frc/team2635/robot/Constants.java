@@ -92,6 +92,18 @@ public final class Constants
 		static double SHOOTER_I_DEFAULT = 0.0001;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
+		static String SHOOTER_SPEED_KEY = "ShooterSpeed";
+		static String TILT_KEY = "Tilt";
+		static String ELEVATION_KEY = "Elevation";
+		
+		static String DRIVE_MODE_KEY = "DriveMode";
+		static String DRIVE_MODE_VBUS = "Vbus";
+		static String DRIVE_MODE_SPEED = "Speed";
+		
+		static String TILT_FAULT_KEY = "TiltFault";
+		static String ELEVATOR_FAULT_KEY = "ElevatorFault";
+		static String SHOOTER_FAULT_KEY = "ShooterFault";
+		
 		static int RIGHT_FLYWHEEL_CHANNEL = 10;
 		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
