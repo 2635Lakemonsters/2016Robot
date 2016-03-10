@@ -624,10 +624,14 @@ public class Robot extends IterativeRobot
     {
     	if(leftJoystick.getRawButton(REZERO_BUTTON))
     	{
+    		rezeroTilt();
     		rezeroElevator();
     	}
     	if(teleopMode == FunctionalityMode.Competition)
     	{
+    		SmartDashboard.putBoolean(TILT_FAULT_KEY, tiltFault);
+    		SmartDashboard.putBoolean(SHOOTER_FAULT_KEY, shooterFault);
+    		SmartDashboard.putBoolean(ELEVATOR_FAULT_KEY, elevatorFault);
     		//TODO: Might want to make this optional
         	boolean leftElevatorLimitHit = !leftElevatorLimit.get();
         	boolean rightElevatorLimitHit = !rightElevatorLimit.get();
@@ -653,10 +657,23 @@ public class Robot extends IterativeRobot
 	    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
 	    	//Only tilt if the shooter is clear from the chassis
 	    	
-	    	//TODO: ELEVATION ABOVE CHASSIS IS TOTALLY WRONG DONT FORGET TO CHANGE
+	    	//TODO: It might be good to put in a more robust object system for each subsystem of the robot, but let's worry about that later.
 	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
 	    	{
+	    		//Do a sanity check
+	    		//If the tilter is being elevated and the encoders aren't roughly matching that, something is seriously wrong.
+	    		//Tilt error is halved for more tolerance
+	    		if(tiltAngle >= TILT_ERROR && !(tiltEncoder.getDistance()  > TILT_ERROR / 2) )
+	    		{
+	    			//TODO: Do something if there's a tilt fault
+	    			tiltFault = true;
+	    		}
+	    		else
+	    		{
+	    			tiltFault = false;
+	    		}
 	    		flywheel.tilt(tiltAngle);
+	    		
 	    	}
 	    	else
 	    	{
@@ -664,10 +681,32 @@ public class Robot extends IterativeRobot
 	    	}
 	    	if(fire)
 	    	{
+	    	
 	    		flywheel.fire(FIRE_SPEED, ELEVATION_MAX, tiltAngle, FEED_SPEED);
+	    		if(!(leftFlywheelMotor.getSpeed() > SHOOTER_ERROR) || !(rightFlywheelMotor.getSpeed() > SHOOTER_ERROR))
+	    		{
+	    			shooterFault = true;
+	    		}
+	    		else
+	    		{
+	    			shooterFault = false;
+	    		}
 	    	}
 	    	else
 	    	{
+	    		//If the elevator is seeking
+	    		if(elevatorPosition > 0)
+	    		{
+	    			//If the left or right elevator isn't returning the correct distance
+	    			if(!(rightElevatorMotor.getPosition() > ELEVATION_ERROR )|| !(leftElevatorMotor.getPosition() > ELEVATION_ERROR))
+	    			{
+	    				elevatorFault = true;
+	    			}
+	    			else
+	    			{
+	    				elevatorFault = false;
+	    			}
+	    		}
 	    		if(elevateUp && elevatorPosition < ELEVATION_MAX)
 	    		{
 	    			elevatorPosition += ELEVATE_UP_SPEED;
@@ -695,6 +734,14 @@ public class Robot extends IterativeRobot
     			if(loadFront)
     	    	{
     	    		flywheel.loadFront(FEED_SPEED);
+    	    		if(!(leftFlywheelMotor.getSpeed() > SHOOTER_ERROR) || !(rightFlywheelMotor.getSpeed() > SHOOTER_ERROR))
+    	    		{
+    	    			shooterFault = true;
+    	    		}
+    	    		else
+    	    		{
+    	    			shooterFault = false;
+    	    		}
     	    	}
     			else
     			{

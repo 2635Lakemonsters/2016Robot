@@ -104,6 +104,10 @@ public final class Constants
 		static String ELEVATOR_FAULT_KEY = "ElevatorFault";
 		static String SHOOTER_FAULT_KEY = "ShooterFault";
 		
+		static boolean tiltFault = false;
+		static boolean elevatorFault = false;
+		static boolean shooterFault = false;
+		
 		static int RIGHT_FLYWHEEL_CHANNEL = 10;
 		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
