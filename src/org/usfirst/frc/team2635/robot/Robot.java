@@ -100,6 +100,8 @@ public class Robot extends IterativeRobot
 		DigitalInput leftElevatorLimit;
 		DigitalInput rightElevatorLimit;
 		
+		DigitalInput tiltLimit;
+		
 		CANTalon rightFlywheelMotor;
 		CANTalon leftFlywheelMotor;
 		
@@ -133,22 +135,23 @@ public class Robot extends IterativeRobot
 	public void driveConfigEncoder()
 	{
 		//TODO: Middle motor is driver
+		//TODO: Uses RobotDrive instead of threeMotor
     	rearRightMotor.changeControlMode(TalonControlMode.Follower);
     	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
     	
-    	midRightMotor.changeControlMode(TalonControlMode.Follower);
+    	midRightMotor.changeControlMode(TalonControlMode.Speed);
     	midRightMotor.set(FRONT_RIGHT_CHANNEL);
     	
-    	frontRightMotor.changeControlMode(TalonControlMode.Speed);
+    	frontRightMotor.changeControlMode(TalonControlMode.Follower);
     	frontRightMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
     	
     	rearLeftMotor.changeControlMode(TalonControlMode.Follower);
     	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
     	
-    	midLeftMotor.changeControlMode(TalonControlMode.Follower);
+    	midLeftMotor.changeControlMode(TalonControlMode.Speed);
     	midLeftMotor.set(FRONT_LEFT_CHANNEL);
     	
-    	frontLeftMotor.changeControlMode(TalonControlMode.Speed);
+    	frontLeftMotor.changeControlMode(TalonControlMode.Follower);
     	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
 
 	}
@@ -285,6 +288,28 @@ public class Robot extends IterativeRobot
 	    	);
 
 	}
+	public void rezeroTilt()
+	{
+		
+		tiltPID.disable();
+		tiltMotor.set(-REZERO_SPEED);
+		while(true)
+		{
+			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
+			{
+				tiltMotor.set(0.0);
+				return;
+			}
+			boolean limitHit = !tiltLimit.get();
+			if(limitHit)
+			{
+				tiltMotor.set(0.0);
+				tiltEncoder.reset();
+				tiltPID.enable();
+				return;
+			}
+		}
+	}
 	public void rezeroElevator()
 	{
 		shooterConfigVbus();
@@ -325,6 +350,7 @@ public class Robot extends IterativeRobot
     	//NOTE: Right and left limit are true when open
     	leftElevatorLimit = new DigitalInput(LEFT_ELEVATOR_LIMIT_CHANNEL);
     	rightElevatorLimit = new DigitalInput(RIGHT_ELEVATOR_LIMIT_CHANNEL);
+    	tiltLimit = new DigitalInput(TILT_LIMIT_CHANNEL);
     	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
     	{
     		//1 encoder tick per 20ms
@@ -334,7 +360,7 @@ public class Robot extends IterativeRobot
     		FIRE_SPEED = -50000.0;
 	    	elevateOneShot = new SensorOneShot(false);
     		rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
-    	
+    		
 	    	leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
 	    	
 	    	rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
@@ -605,6 +631,9 @@ public class Robot extends IterativeRobot
     		//TODO: Might want to make this optional
         	boolean leftElevatorLimitHit = !leftElevatorLimit.get();
         	boolean rightElevatorLimitHit = !rightElevatorLimit.get();
+        	boolean tiltLimitHit = !tiltLimit.get();
+        	
+        	
         	if(leftElevatorLimitHit)
         	{
         		leftElevatorMotor.setPosition(0.0);
@@ -613,7 +642,10 @@ public class Robot extends IterativeRobot
         	{
         		rightElevatorMotor.setPosition(0.0);
         	}
-        	
+        	if(tiltLimitHit)
+        	{
+        		tiltEncoder.reset();
+        	}
     		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
@@ -621,6 +653,7 @@ public class Robot extends IterativeRobot
 	    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
 	    	//Only tilt if the shooter is clear from the chassis
 	    	
+	    	//TODO: ELEVATION ABOVE CHASSIS IS TOTALLY WRONG DONT FORGET TO CHANGE
 	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
 	    	{
 	    		flywheel.tilt(tiltAngle);
@@ -702,11 +735,11 @@ public class Robot extends IterativeRobot
 	    	}
 	    	else if(tiltUp)
 	    	{
-	    		flywheel.tilt(1.0);
+	    		flywheel.tilt(-1.0);
 	    	}
 	    	else if(tiltDown)
 	    	{
-	    		flywheel.tilt(-1.0);
+	    		flywheel.tilt(1.0);
 	    	}
 	    	else
 	    	{

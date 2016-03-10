@@ -117,7 +117,9 @@ public final class Constants
 		static int LEFT_ELEVATOR_LIMIT_CHANNEL = 2;
 		static int RIGHT_ELEVATOR_LIMIT_CHANNEL = 3;
 		
-		static double REZERO_SPEED = -0.4;
+		static int TILT_LIMIT_CHANNEL = 4;
+		
+		static double REZERO_SPEED = -0.3;
 		
 		static int FEED_CHANNEL = 11;
 		
@@ -134,11 +136,11 @@ public final class Constants
 		static boolean elevatorState = false;
 		static double debugTiltPosition = 0.0;
 		
-		static double TILT_MAX = 750.0; 
+		static double TILT_MAX = -750.0; 
 		static double TILT_RESTING = 0.0;
 		
 		static double ELEVATION_MAX = 45000.0; 
-		static double ELEVATION_ABOVE_CHASSIS = 25000.0;
+		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		
 		static double ELEVATION_ERROR = 1000.0;
 		static double SHOOTER_ERROR = 3000.0;
