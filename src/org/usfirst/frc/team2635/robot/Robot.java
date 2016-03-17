@@ -63,12 +63,11 @@ public class Robot extends IterativeRobot
 	//TODO: Make everything fit FunctionalityMode structure
 	enum FunctionalityMode
 	{
-		Competition, //More position
-		Debug_Vbus, //More vbus
-		Debug_Encoder
+		Encoder, //More position
+		Vbus, //More vbus
+		
 	}
-	FunctionalityMode runMode = FunctionalityMode.Competition;
-	
+	FunctionalityMode runMode = FunctionalityMode.Encoder;
 //See Constants.java for constants
 //VARIABLES
 	//DRIVE VARIABLES
@@ -185,12 +184,12 @@ public class Robot extends IterativeRobot
     	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
 		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
 
-		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
+		if(setupMode == FunctionalityMode.Encoder || setupMode == FunctionalityMode.Debug_Encoder)
 		{
 			driveConfigEncoder();
 			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
 		}
-		else if(setupMode == FunctionalityMode.Debug_Vbus)
+		else if(setupMode == FunctionalityMode.Vbus)
 		{
 			driveConfigVbus();
 		}
@@ -351,7 +350,7 @@ public class Robot extends IterativeRobot
     	leftElevatorLimit = new DigitalInput(LEFT_ELEVATOR_LIMIT_CHANNEL);
     	rightElevatorLimit = new DigitalInput(RIGHT_ELEVATOR_LIMIT_CHANNEL);
     	tiltLimit = new DigitalInput(TILT_LIMIT_CHANNEL);
-    	if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
+    	if(setupMode == FunctionalityMode.Encoder || setupMode == FunctionalityMode.Debug_Encoder)
     	{
     		//1 encoder tick per 20ms
     		ELEVATE_DOWN_SPEED = -1000.0;
@@ -374,7 +373,7 @@ public class Robot extends IterativeRobot
 
 	    	feedMotor = new CANTalon(FEED_CHANNEL);
 
-	    	if(setupMode == FunctionalityMode.Competition)
+	    	if(setupMode == FunctionalityMode.Encoder)
 	    	{
 	    		shooterConfigEncoder(true);
 	    	}
@@ -395,7 +394,7 @@ public class Robot extends IterativeRobot
 	    			//new ActuatorBlockingMotor(tiltMotor, new SensorHitTest(new SensorCANTalon(rightElevatorMotor), ELEVATION_MAX, ELEVATION_ABOVE_CHASSIS)));
     	}
    
-    	else if(setupMode == FunctionalityMode.Debug_Vbus)
+    	else if(setupMode == FunctionalityMode.Vbus)
     	{
     		shooterConfigVbus();
     	}
@@ -403,13 +402,13 @@ public class Robot extends IterativeRobot
     }
 	public void climberInit(FunctionalityMode setupMode)
 	{
-		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
+		if(setupMode == FunctionalityMode.Encoder)
 		{
 			climberMotor = new CANTalon(CLIMBER_CHANNEL);
 			climberMotor.changeControlMode(TalonControlMode.Position);
 			climberMotor.setPID(CLIMBER_P_DEFAULT, CLIMBER_I_DEFAULT, CLIMBER_D_DEFAULT);
 		}
-		else if(setupMode == FunctionalityMode.Debug_Vbus)
+		else if(setupMode == FunctionalityMode.Vbus)
 		{
 			climberMotor = new CANTalon(CLIMBER_CHANNEL);
 		}
@@ -449,7 +448,7 @@ public class Robot extends IterativeRobot
 	}
 	public void smartDashboardInit(FunctionalityMode setupMode)
 	{
-		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
+		if(setupMode == FunctionalityMode.Encoder)
 		{
 			NetworkTable.flush();
 			SmartDashboard.putBoolean(AUTO_KEY, true);
@@ -491,7 +490,7 @@ public class Robot extends IterativeRobot
     	
 	    //if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
 	    smartDashboardInit(runMode);
-    	driveInit(FunctionalityMode.Debug_Vbus);	
+    	driveInit(FunctionalityMode.Vbus);	
 	    shooterInit(runMode);
 	    //climberInit();
 	    cameraInit(runMode);
@@ -533,7 +532,7 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    	if(runMode == FunctionalityMode.Competition || runMode == FunctionalityMode.Debug_Encoder)
+    	if(runMode == FunctionalityMode.Encoder)
     	{
     		if(SmartDashboard.getBoolean(REZERO_KEY))
     		{
@@ -564,7 +563,7 @@ public class Robot extends IterativeRobot
      */
     public double cameraTeleop(FunctionalityMode teleopMode)
     {
-    	if(teleopMode == FunctionalityMode.Competition)
+    	if(teleopMode == FunctionalityMode.Encoder)
     	{
 	    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
 	    	//TODO: Tilt angle is currently set to just always be manually set
@@ -627,7 +626,7 @@ public class Robot extends IterativeRobot
     		rezeroTilt();
     		rezeroElevator();
     	}
-    	if(teleopMode == FunctionalityMode.Competition)
+    	if(teleopMode == FunctionalityMode.Encoder)
     	{
     		SmartDashboard.putBoolean(TILT_FAULT_KEY, tiltFault);
     		SmartDashboard.putBoolean(SHOOTER_FAULT_KEY, shooterFault);
@@ -754,7 +753,7 @@ public class Robot extends IterativeRobot
 	    	
     	}
   
-    	else if(teleopMode == FunctionalityMode.Debug_Vbus)
+    	else if(teleopMode == FunctionalityMode.Vbus)
     	{
     		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
@@ -793,7 +792,7 @@ public class Robot extends IterativeRobot
 	    	}
 	    	 	
     	}
-    	else if(teleopMode == FunctionalityMode.Debug_Encoder)
+    	else if(teleopMode == FunctionalityMode.Encoder)
     	{
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
@@ -847,7 +846,7 @@ public class Robot extends IterativeRobot
     public void climberTeleop(FunctionalityMode teleopMode)
     {
 		
-		if(teleopMode == FunctionalityMode.Competition || teleopMode == FunctionalityMode.Debug_Encoder)
+		if(teleopMode == FunctionalityMode.Encoder)
 		{
 			boolean climbUp = (Boolean) climbUpOneShot.sense(leftJoystick.getRawButton(CLIMB_UP_BUTTON));
 			boolean climbDown = (Boolean) climbDownOneShot.sense(leftJoystick.getRawButton(CLIMB_DOWN_BUTTON));
@@ -863,7 +862,7 @@ public class Robot extends IterativeRobot
 	    	}
 	    	climber.actuate(CLIMBER_POSITIONS[climberIndex]);
 		}
-		else if(teleopMode == FunctionalityMode.Debug_Vbus)
+		else if(teleopMode == FunctionalityMode.Vbus)
 		{
 			boolean climbUp = leftJoystick.getRawButton(CLIMB_UP_BUTTON);
 			boolean climbDown = leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
@@ -906,7 +905,7 @@ public class Robot extends IterativeRobot
     		//TODO: Get drive working, add its config here
     		if(rightJoystick.getRawButton(VOLTAGE_MODE_BUTTON))
     		{
-    			runMode = FunctionalityMode.Debug_Vbus;
+    			runMode = FunctionalityMode.Vbus;
     			shooterConfigVbus();
     			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_VBUS);
     			
@@ -914,7 +913,7 @@ public class Robot extends IterativeRobot
     		else if(rightJoystick.getRawButton(SPEED_MODE_BUTTON))
     		{
     			
-    			runMode = FunctionalityMode.Competition;
+    			runMode = FunctionalityMode.Encoder;
     			shooterConfigEncoder(false);
     			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
     		}
