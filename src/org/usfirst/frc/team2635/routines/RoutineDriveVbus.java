@@ -6,31 +6,32 @@ import org.usfirst.frc.team2635.routines.IRoutine.RoutineState;
 
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
-public class RoutineDriveVbus extends DriveCommon implements IRoutine
+public class RoutineDriveVbus implements IRoutine
 {
 
 	/**
 	 * Changes all the motors to PercentVbus mode, initializes robotDrive to a DriveThreeMotorTankDrive.
 	 */
-	public RoutineDriveVbus()
+	DriveCommon common; 
+	public RoutineDriveVbus(DriveCommon common)
 	{
-		super();
-    	rearRightMotor.changeControlMode(TalonControlMode.PercentVbus);
-    	midRightMotor.changeControlMode(TalonControlMode.PercentVbus);
-    	frontRightMotor.changeControlMode(TalonControlMode.PercentVbus);   	
-    	rearLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
-    	midLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
-    	frontLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+		this.common = common;
+    	common.rearRightMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	common.midRightMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	common.frontRightMotor.changeControlMode(TalonControlMode.PercentVbus);   	
+    	common.rearLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	common.midLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
+    	common.frontLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
+    	common.robotDrive = new DriveThreeMotorTankDrive(common.rearRightMotor, common.midRightMotor, common.frontRightMotor, common.rearLeftMotor, common.midLeftMotor, common.frontLeftMotor);
 	}
 	
 	@Override
 	public RoutineState run() 
 	{	
-    	double RY = rightJoystick.getRawAxis(RIGHT_Y_AXIS);
-    	double LY = -leftJoystick.getRawAxis(LEFT_Y_AXIS);
-    	robotDrive.drive(LY, RY);
+    	double RY = common.rightJoystick.getRawAxis(common.RIGHT_Y_AXIS);
+    	double LY = -common.leftJoystick.getRawAxis(common.LEFT_Y_AXIS);
+    	common.robotDrive.drive(LY, RY);
     	return RoutineState.NO_FAULT;
 	}
 
@@ -38,7 +39,7 @@ public class RoutineDriveVbus extends DriveCommon implements IRoutine
 	public void cleanup() 
 	{
 		//Prevent states that forget to zero drive from making the robot go out of control
-		robotDrive.drive(0, 0);
+		common.robotDrive.drive(0, 0);
 	} 
 
 }

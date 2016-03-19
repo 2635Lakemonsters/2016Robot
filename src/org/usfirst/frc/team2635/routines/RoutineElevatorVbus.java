@@ -1,43 +1,47 @@
 package org.usfirst.frc.team2635.routines;
 
+import org.usfirst.frc.team2635.components.ElevatorCommon;
+
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.DigitalInput;
 
-public class RoutineElevatorVbus extends ElevatorCommon implements IRoutine
+public class RoutineElevatorVbus implements IRoutine
 {
+	ElevatorCommon common;
 
-	public RoutineElevatorVbus() 
+	public RoutineElevatorVbus(ElevatorCommon common) 
 	{
-		super();
-		rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
-		leftElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
+		this.common = common;
+		common.rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
+		common.leftElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
 		
 	}
 
 	@Override
 	public RoutineState run() 
 	{
-		boolean limitHit = rightElevatorLimit.get() || leftElevatorLimit.get();
+		boolean limitHit = !common.rightElevatorLimit.get() || !common.leftElevatorLimit.get();
 		
 		if(limitHit)
 		{
-			rightElevatorMotor.setPosition(0.0);
-			leftElevatorMotor.setPosition(0.0);
+			common.rightElevatorMotor.setPosition(0.0);
+			common.leftElevatorMotor.setPosition(0.0);
 		}
 		
-		if(rightJoystick.getRawButton(ELEVATE_UP_BUTTON))
+		if(common.rightJoystick.getRawButton(common.ELEVATE_UP_BUTTON))
 		{
-			rightElevatorMotor.set(1.0);
-			leftElevatorMotor.set(1.0);
+			common.rightElevatorMotor.set(1.0);
+			common.leftElevatorMotor.set(1.0);
 		}
-		else if(rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON))
+		else if(common.rightJoystick.getRawButton(common.ELEVATE_DOWN_BUTTON))
 		{
-			rightElevatorMotor.set(-0.7);
-			leftElevatorMotor.set(-0.7);
+			common.rightElevatorMotor.set(-0.7);
+			common.leftElevatorMotor.set(-0.7);
 		}
 		else
 		{
-			rightElevatorMotor.set(0.0);
-			leftElevatorMotor.set(0.0);
+			common.rightElevatorMotor.set(0.0);
+			common.leftElevatorMotor.set(0.0);
 		}
 		return RoutineState.NO_FAULT;
 	}
@@ -45,8 +49,8 @@ public class RoutineElevatorVbus extends ElevatorCommon implements IRoutine
 	@Override
 	public void cleanup()
 	{
-		rightElevatorMotor.set(0.0);
-		leftElevatorMotor.set(0.0);
+		common.rightElevatorMotor.set(0.0);
+		common.leftElevatorMotor.set(0.0);
 		
 	}
 	

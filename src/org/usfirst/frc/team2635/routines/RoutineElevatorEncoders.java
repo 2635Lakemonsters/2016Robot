@@ -1,24 +1,29 @@
 package org.usfirst.frc.team2635.routines;
 
+import org.usfirst.frc.team2635.components.ElevatorCommon;
+
 import com.lakemonsters2635.sensor.modules.SensorOneShot;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
-public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
+public class RoutineElevatorEncoders implements IRoutine
 {
 	double elevation = 0;
 	boolean elevationState = false;
 	SensorOneShot aimOneShot = new SensorOneShot(false);
-	public RoutineElevatorEncoders()
+	SensorOneShot initOneShot = new SensorOneShot(false);
+	ElevatorCommon common;
+	public RoutineElevatorEncoders(ElevatorCommon common)
 	{
-		super();
-		rightElevatorMotor.changeControlMode(TalonControlMode.Position);
-		rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+		this.common = common;
+		common.rightElevatorMotor.changeControlMode(TalonControlMode.Position);
+		common.rightElevatorMotor.setPID(common.ELEVATOR_P_DEFAULT, common.ELEVATOR_I_DEFAULT, common.ELEVATOR_D_DEFAULT);
 		
-		leftElevatorMotor.changeControlMode(TalonControlMode.Position);
-		leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+		common.leftElevatorMotor.changeControlMode(TalonControlMode.Position);
+		common.leftElevatorMotor.setPID(common.ELEVATOR_P_DEFAULT, common.ELEVATOR_I_DEFAULT, common.ELEVATOR_D_DEFAULT);
 		
 	}
 
@@ -26,8 +31,8 @@ public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 	public RoutineState run()
 	{
 		
-		FeedbackDeviceStatus rightStatus = rightElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
-		FeedbackDeviceStatus leftStatus = leftElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
+		FeedbackDeviceStatus rightStatus = common.rightElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
+		FeedbackDeviceStatus leftStatus = common.leftElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		
 		boolean encodersNotConnected = rightStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || rightStatus == FeedbackDeviceStatus.FeedbackStatusUnknown 
 				|| leftStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || leftStatus == FeedbackDeviceStatus.FeedbackStatusUnknown;
@@ -36,21 +41,21 @@ public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 			return RoutineState.FAULT_ENCODER;
 		}
 		
-		boolean rightLimitHit = !rightElevatorLimit.get();
-		boolean leftLimitHit = !leftElevatorLimit.get();
+		boolean rightLimitHit = !common.rightElevatorLimit.get();
+		boolean leftLimitHit = !common.leftElevatorLimit.get();
 		
 		if(rightLimitHit || leftLimitHit)
 		{
-			rightElevatorMotor.setPosition(0.0);
-			leftElevatorMotor.setPosition(0.0);
+			common.rightElevatorMotor.setPosition(0.0);
+			common.leftElevatorMotor.setPosition(0.0);
 		}
 		
-		if((boolean)aimOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON)))
+		if((boolean)aimOneShot.sense(common.rightJoystick.getRawButton(common.AIM_BUTTON)))
 		{
 			//Toggle between up and down
 			if(elevationState == false)
 			{
-				elevation = ELEVATION_MAX;
+				elevation = common.ELEVATION_MAX;
 				elevationState = true;
 			}
 			else
@@ -59,9 +64,12 @@ public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 				elevationState = false;
 			}
 		}
-		
-		rightElevatorMotor.set(elevation);
-		leftElevatorMotor.set(elevation);
+		if((boolean) initOneShot.sense(common.leftJoystick.getRawButton(7)))
+		{
+			elevation = 35000;
+		}
+		common.rightElevatorMotor.set(elevation);
+		common.leftElevatorMotor.set(elevation);
 		
 		return RoutineState.NO_FAULT;	
 		

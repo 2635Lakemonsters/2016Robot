@@ -1,6 +1,10 @@
 package org.usfirst.frc.team2635.routines;
 
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+
+import org.usfirst.frc.team2635.components.ElevatorCommon;
+
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
 
 public class RoutineZeroElevators extends ElevatorCommon implements IRoutine
@@ -8,9 +12,9 @@ public class RoutineZeroElevators extends ElevatorCommon implements IRoutine
 
 	private static final double REZERO_SPEED = -0.4;
 
-	public RoutineZeroElevators()
+	public RoutineZeroElevators(DigitalInput leftElevatorLimit, DigitalInput rightElevatorLimit)
 	{
-		super();
+		super(leftElevatorLimit, leftElevatorLimit);
 		rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
 		leftElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
 		watchdog = new Timer();

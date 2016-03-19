@@ -3,40 +3,42 @@ package org.usfirst.frc.team2635.components;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 
 public class TiltCommon extends Common
 {
-	public TiltCommon()
-	{
-		super();
-		tiltMotor = new CANTalon(TILT_CHANNEL);
-    	tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
-		tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
 	
-		tiltLimit = new DigitalInput(TILT_LIMIT_CHANNEL);
+	public TiltCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon tiltMotor, Encoder tiltEncoder,
+			PIDController tiltPID, DigitalInput tiltLimit)
+	{
+		super(rightJoystick, leftJoystick);
+		this.tiltMotor = tiltMotor;
+		this.tiltEncoder = tiltEncoder;
+		this.tiltPID = tiltPID;
+		this.tiltLimit = tiltLimit;
 	}
 
-	protected static double TILT_MAX = -750.0; 
+	public static double TILT_MAX = -750.0; 
 
-	protected CANTalon tiltMotor;
+	public CANTalon tiltMotor;
 
-	protected Encoder tiltEncoder;
-	protected PIDController tiltPID;
-	protected DigitalInput tiltLimit;
+	public Encoder tiltEncoder;
+	public PIDController tiltPID;
+	public DigitalInput tiltLimit;
 
-	protected static int TILT_ENCODER_A = 1;
-	protected static int TILT_ENCODER_B = 0;
-	protected static String CAMERA_Y_KEY_P = "Camera Y P";
-	protected static String CAMERA_Y_KEY_I = "Camera Y I";
-	protected static String CAMERA_Y_KEY_D = "Camera Y D";
-	protected static double CAMERA_Y_P_DEFAULT = 0.015;
-	protected static double CAMERA_Y_I_DEFAULT = 0.001;
-	protected static double CAMERA_Y_D_DEFAULT = 0.0;
-	protected static int RIGHT_ELEVATOR_CHANNEL = 13;
-	static int TILT_LIMIT_CHANNEL = 4;
+	public static int TILT_ENCODER_A = 1;
+	public static int TILT_ENCODER_B = 0;
+	public static String CAMERA_Y_KEY_P = "Camera Y P";
+	public static String CAMERA_Y_KEY_I = "Camera Y I";
+	public static String CAMERA_Y_KEY_D = "Camera Y D";
+	public static double CAMERA_Y_P_DEFAULT = 0.015;
+	public static double CAMERA_Y_I_DEFAULT = 0.001;
+	public static double CAMERA_Y_D_DEFAULT = 0.0;
+	public static int RIGHT_ELEVATOR_CHANNEL = 13;
+	public static int TILT_LIMIT_CHANNEL = 4;
 
-	static int TILT_CHANNEL = 9;
+	public static int TILT_CHANNEL = 9;
 
 
 }

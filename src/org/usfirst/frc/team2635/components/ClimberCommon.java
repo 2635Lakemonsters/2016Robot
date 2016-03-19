@@ -5,17 +5,20 @@ import com.lakemonsters2635.sensor.modules.SensorOneShot;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.Joystick;
 
 public class ClimberCommon extends Common
 {
-	protected CANTalon climberMotor;
-	protected static final int CLIMBER_CHANNEL = 14;
+	public CANTalon climberMotor;
+	public static final int CLIMBER_CHANNEL = 14;
 	
-	protected static final int UP_BUTTON = 3;
-	protected static final int DOWN_BUTTON = 2;
-	
-	public ClimberCommon()
+	public static final int UP_BUTTON = 3;
+	public static final int DOWN_BUTTON = 2;
+	public ClimberCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon climberMotor)
 	{
-		climberMotor = new CANTalon(CLIMBER_CHANNEL);
+		super(rightJoystick, leftJoystick);
+		this.climberMotor = climberMotor;
 	}
+	
+	
 }

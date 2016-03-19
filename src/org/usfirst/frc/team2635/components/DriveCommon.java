@@ -3,6 +3,7 @@ package org.usfirst.frc.team2635.components;
 import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.Joystick;
 
 /**
  * Container class containing all of the things that make up the drive system.
@@ -11,29 +12,33 @@ import edu.wpi.first.wpilibj.CANTalon;
  */
 public class DriveCommon extends Common 
 {
-	public DriveCommon()
+
+	public DriveCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon rearRightMotor, CANTalon midRightMotor,
+			CANTalon frontRightMotor, CANTalon rearLeftMotor, CANTalon midLeftMotor, CANTalon frontLeftMotor,
+			BaseDrive robotDrive, double speedModeScaler)
 	{
-		super();
-    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
-    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
-    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
-    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
-    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
-		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
-		
+		super(rightJoystick, leftJoystick);
+		this.rearRightMotor = rearRightMotor;
+		this.midRightMotor = midRightMotor;
+		this.frontRightMotor = frontRightMotor;
+		this.rearLeftMotor = rearLeftMotor;
+		this.midLeftMotor = midLeftMotor;
+		this.frontLeftMotor = frontLeftMotor;
+		this.robotDrive = robotDrive;
+		this.speedModeScaler = speedModeScaler;
 	}
-	protected CANTalon rearRightMotor;
-	protected CANTalon midRightMotor;
-	protected CANTalon frontRightMotor;
+	public CANTalon rearRightMotor;
+	public CANTalon midRightMotor;
+	public CANTalon frontRightMotor;
 	
-	protected CANTalon rearLeftMotor;
-	protected CANTalon midLeftMotor;
-	protected CANTalon frontLeftMotor;
+	public CANTalon rearLeftMotor;
+	public CANTalon midLeftMotor;
+	public CANTalon frontLeftMotor;
 	
 	/**
 	 * The type of robotDrive can change between states, so it needs to be initialized in the state, not DriveComponents
 	 */
-	protected BaseDrive robotDrive;
+	public BaseDrive robotDrive;
 
 	public static int REAR_RIGHT_CHANNEL = 1;
 	public static int MID_RIGHT_CHANNEL = 2;
