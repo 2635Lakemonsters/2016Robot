@@ -22,7 +22,7 @@ public class RoutineManager
 		this.currentRoutine = routine;
 		this.runCount = runCount;
 	}
-	public RoutineState runState()
+	public RoutineState runRoutine()
 	{
 		if(runCount != null)
 		{

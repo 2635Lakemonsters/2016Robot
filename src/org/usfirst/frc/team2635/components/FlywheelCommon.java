@@ -4,7 +4,6 @@ import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
 import org.usfirst.frc.team2635.modules.Flywheel;
 
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.lakemonsters2635.sensor.modules.SensorOneShot;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.DigitalInput;

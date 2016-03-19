@@ -11,7 +11,7 @@ public class RoutineFlywheelVBus extends FlywheelCommon implements IRoutine
 		rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
 		leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
 		feedMotor.changeControlMode(TalonControlMode.PercentVbus);
-		FEED_SPEED = -1.0;
+		FEED_SPEED = -0.5;
 		FIRE_SPEED = 1.0;
 	}
 	@Override

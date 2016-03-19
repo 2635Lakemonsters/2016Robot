@@ -10,6 +10,7 @@ public class RoutineTiltVbus extends TiltCommon implements IRoutine
 	public RoutineTiltVbus()
 	{
 		super();
+		tiltPID.disable();
 		tiltMotor.changeControlMode(TalonControlMode.PercentVbus);
 	}
 	static int TILT_UP_BUTTON = 6;

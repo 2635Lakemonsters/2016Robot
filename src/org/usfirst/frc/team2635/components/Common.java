@@ -24,18 +24,17 @@ public class Common
 	public static int RIGHT_Y_AXIS = 1;
 	public static int LEFT_Y_AXIS = 1;
 
-	static int ELEVATE_UP_BUTTON = 11;
-	static int ELEVATE_DOWN_BUTTON = 10;
+	protected static int ELEVATE_UP_BUTTON = 11;
+	protected static int ELEVATE_DOWN_BUTTON = 10;
 	
-	static  int CLIMB_UP_BUTTON = 3;
-	static  int CLIMB_DOWN_BUTTON = 2;
+	protected static  int CLIMB_UP_BUTTON = 3;
+	protected static  int CLIMB_DOWN_BUTTON = 2;
 	
-	static  int TILT_AXIS = 2;
-	static  int AIM_BUTTON = 3;
-	static  int FIRE_BUTTON = 1;
-	static  int LOAD_FRONT_BUTTON = 2;
-	static int REZERO_BUTTON = 8;
-	
+	protected static  int TILT_AXIS = 2;
+	protected static  int AIM_BUTTON = 3;
+	protected static  int FIRE_BUTTON = 1;
+	protected static  int LOAD_FRONT_BUTTON = 2;
+	protected static int REZERO_BUTTON = 8;	
 	static int REZERO_INTERRUPT_BUTTON = 9;
 
 

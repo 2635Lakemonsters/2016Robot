@@ -9,8 +9,13 @@ public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine
 {
 	public RoutineFlywheelEncoders()
 	{
+	//TODO set pid
 		leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+		leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
+		
 		rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+		rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
+		
 		feedMotor.changeControlMode(TalonControlMode.PercentVbus);
 		FIRE_SPEED = 50000.0;
 		FEED_SPEED = -FIRE_SPEED / 2.5;

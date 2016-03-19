@@ -51,9 +51,9 @@ public final class Constants
 	    static  double CAMERA_X_I_DEFAULT = 0.0006;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
 
-		static  double CAMERA_Y_P_DEFAULT = 0.015;
-		static  double CAMERA_Y_I_DEFAULT = 0.001;
-		static  double CAMERA_Y_D_DEFAULT = 0.0;
+		 static  double CAMERA_Y_P_DEFAULT = 0.015;
+		 static  double CAMERA_Y_I_DEFAULT = 0.001;
+		 static  double CAMERA_Y_D_DEFAULT = 0.0;
 		
 		static  double CAMERA_RESOLUTION_X = 680.0;
 		static  double CAMERA_RESOLUTION_Y = 460.0;
