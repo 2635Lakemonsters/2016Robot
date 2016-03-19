@@ -20,17 +20,20 @@ public class RoutineFlywheelVBus extends FlywheelCommon implements IRoutine
 		
 		if(rightJoystick.getRawButton(FIRE_BUTTON))
 		{
-			flywheelRoutine.actuate(FIRE_SPEED);
+			spinFlywheels(FIRE_SPEED);
+			//TODO add a wait time
+			feedMotor.set(1.0);
 		}
 		else if(rightJoystick.getRawButton(FEED_BUTTON))
 		{
-			feedRoutine.actuate(FEED_SPEED);
+			spinFlywheels(FEED_SPEED);
+			feedMotor.set(-1.0);
 		}
 		else
 		{
 			//Motors do not auto-zero, must be done manually.
-			flywheelRoutine.actuate(0.0);
-			feedRoutine.actuate(0.0);
+			spinFlywheels(0.0);
+			feedMotor.set(0.0);
 		}
 		return RoutineState.NO_FAULT;
 	}
@@ -38,8 +41,8 @@ public class RoutineFlywheelVBus extends FlywheelCommon implements IRoutine
 	@Override
 	public void cleanup()
 	{
-		flywheelRoutine.actuate(0.0);
-		feedRoutine.actuate(0.0);
+		spinFlywheels(0.0);
+		feedMotor.set(0.0);
 	}
 
 }

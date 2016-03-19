@@ -25,8 +25,6 @@ public class FlywheelCommon extends Common
 		this.rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
 		this.leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
 		this.feedMotor = new CANTalon(FEED_CHANNEL);
-		flywheelRoutine = new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor);
-		feedRoutine = new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor);
 	}
 
 
@@ -37,8 +35,6 @@ public class FlywheelCommon extends Common
 	protected CANTalon leftFlywheelMotor;
 	
 	protected CANTalon feedMotor;
-	protected BaseActuator<Double> flywheelRoutine;
-	protected BaseActuator<Double> feedRoutine;
 	protected static String REZERO_KEY = "Reset encoders";
 	/**
 	 * Left Joystick
@@ -73,6 +69,11 @@ public class FlywheelCommon extends Common
 	protected static double SHOOTER_ERROR = 3000.0;
 	protected static int FIRE_BUTTON = 1;
 	protected static int FEED_BUTTON = 2;
+	protected void spinFlywheels(double speed)
+	{
+		rightFlywheelMotor.set(speed);
+		leftFlywheelMotor.set(-speed);
+	}
 
 
 

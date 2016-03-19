@@ -6,13 +6,17 @@ public interface IRoutine
 	{
 	
 		/**
-		 * Routine completed normally
+		 * Routine completed normally.
 		 */
 		NO_FAULT,
 		/**
-		 * Routine has been set to run a set number of times, has ran that many times, and now will no longer run.
+		 * Routine has entered a "done" state normally. Will no longer act.
 		 */
 		ROUTINE_FINISHED,
+		/**
+		 * Routine has entered a "done" state because of a fault. Will no longer act.
+		 */
+		ROUTINE_FINISHED_WITH_FAULT,
 		/**
 		 * A motor has entered a fault condition, usually a lack of movement.
 		 */

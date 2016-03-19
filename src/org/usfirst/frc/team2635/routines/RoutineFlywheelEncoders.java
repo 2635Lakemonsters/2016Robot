@@ -4,6 +4,7 @@ import org.usfirst.frc.team2635.components.FlywheelCommon;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine 
 {
@@ -28,6 +29,8 @@ public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine
 
 		FeedbackDeviceStatus leftFlywheelStatus = leftFlywheelMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		FeedbackDeviceStatus rightFlywheelStatus = rightFlywheelMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
+		SmartDashboard.putString("Left flywheel encoder status", leftFlywheelStatus.toString());
+		SmartDashboard.putString("Right flywheel encoder status", rightFlywheelStatus.toString());
 		//TODO Experimental
 		if(leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown 
 				|| rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown)
@@ -39,26 +42,33 @@ public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine
 		
 		if(rightJoystick.getRawButton(FIRE_BUTTON))
 		{
-			flywheelRoutine.actuate(FIRE_SPEED);
+			spinFlywheels(FIRE_SPEED);
+			if(Math.abs(rightFlywheelMotor.getError()) < 3000.0)
+			{
+				feedMotor.set(1.0);
+			}
+			
 		}
 		else if(rightJoystick.getRawButton(FEED_BUTTON))
 		{
-			feedRoutine.actuate(FEED_SPEED);
+			spinFlywheels(FEED_SPEED);
+			feedMotor.set(-1.0);
 		}
 		else
 		{
-			flywheelRoutine.actuate(0.0);
-			feedRoutine.actuate(0.0);
+			spinFlywheels(0.0);
+			feedMotor.set(0.0);
+			
 		}
 		return routineState;
 		
 	}
-
 	@Override
 	public void cleanup()
 	{
-		flywheelRoutine.actuate(0.0);
-		feedRoutine.actuate(0.0);		
+		spinFlywheels(0.0);
+		feedMotor.set(0.0);
+
 	}
 	
 }

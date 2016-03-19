@@ -5,8 +5,7 @@ import org.usfirst.frc.team2635.routines.IRoutine.RoutineState;
 public class RoutineManager
 {
 	IRoutine currentRoutine;
-	Integer runCount;
-	public void changeState(IRoutine newState, Integer runCount)
+	public void changeState(IRoutine newState)
 	{
 		currentRoutine.cleanup();
 		currentRoutine = newState;
@@ -16,34 +15,15 @@ public class RoutineManager
 	 * @param routine
 	 * @param runCount Greater than zero for a count, null for infinite
 	 */
-	public RoutineManager(IRoutine routine, Integer runCount)
+	public RoutineManager(IRoutine routine)
 	{
 		super();
 		this.currentRoutine = routine;
-		this.runCount = runCount;
+	
 	}
 	public RoutineState runRoutine()
 	{
-		if(runCount != null)
-		{
-			if(runCount < 0)
-			{
-				runCount--;
-				return currentRoutine.run();
+		return currentRoutine.run();		
+	}
 
-			}
-			else
-			{
-				return RoutineState.ROUTINE_FINISHED;
-			}
-		}
-		else
-		{
-			return currentRoutine.run();
-		}
-	}
-	public void resetCount(Integer runCount)
-	{
-		this.runCount = runCount;
-	}
 }

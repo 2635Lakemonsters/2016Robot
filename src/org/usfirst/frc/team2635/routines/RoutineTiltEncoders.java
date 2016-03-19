@@ -8,14 +8,14 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDController;
 
 
-public class RoutineTiltEncoder extends TiltCommon implements IRoutine
+public class RoutineTiltEncoders extends TiltCommon implements IRoutine
 {
 	//Need this to get elevation data so the tilter doesn't tilt too soon.
 	CANTalon rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
 	static double ELEVATION_MAX = 45000.0; 
 	static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 
-	public RoutineTiltEncoder() 
+	public RoutineTiltEncoders() 
 	{
 		super();
 		tiltPID.setPID(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT);
@@ -48,7 +48,6 @@ public class RoutineTiltEncoder extends TiltCommon implements IRoutine
 	@Override
 	public void cleanup()
 	{
-		// TODO Auto-generated method stub
 		
 	}
 

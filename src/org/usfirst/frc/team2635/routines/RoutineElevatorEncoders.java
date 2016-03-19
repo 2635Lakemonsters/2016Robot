@@ -1,12 +1,16 @@
 package org.usfirst.frc.team2635.routines;
 
+import com.lakemonsters2635.sensor.modules.SensorOneShot;
+
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
 public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 {
-
+	double elevation = 0;
+	boolean elevationState = false;
+	SensorOneShot aimOneShot = new SensorOneShot(false);
 	public RoutineElevatorEncoders()
 	{
 		super();
@@ -21,6 +25,7 @@ public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 	@Override
 	public RoutineState run()
 	{
+		
 		FeedbackDeviceStatus rightStatus = rightElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		FeedbackDeviceStatus leftStatus = leftElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		
@@ -30,16 +35,41 @@ public class RoutineElevatorEncoders extends ElevatorCommon implements IRoutine
 		{
 			return RoutineState.FAULT_ENCODER;
 		}
-		if(rightJoystick.getRawButton(AIM_BUTTON))
+		
+		boolean rightLimitHit = !rightElevatorLimit.get();
+		boolean leftLimitHit = !leftElevatorLimit.get();
+		
+		if(rightLimitHit || leftLimitHit)
 		{
-			
+			rightElevatorMotor.setPosition(0.0);
+			leftElevatorMotor.setPosition(0.0);
 		}
+		
+		if((boolean)aimOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON)))
+		{
+			//Toggle between up and down
+			if(elevationState == false)
+			{
+				elevation = ELEVATION_MAX;
+				elevationState = true;
+			}
+			else
+			{
+				elevation = 0.0;
+				elevationState = false;
+			}
+		}
+		
+		rightElevatorMotor.set(elevation);
+		leftElevatorMotor.set(elevation);
+		
+		return RoutineState.NO_FAULT;	
+		
 	}
 
 	@Override
 	public void cleanup()
 	{
-		// TODO Auto-generated method stub
 		
 	}
 
