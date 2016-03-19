@@ -27,7 +27,7 @@ public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine
 		if(leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown 
 				|| rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown)
 		{
-			routineState = RoutineState.FAULT;
+			routineState = RoutineState.FAULT_ENCODER;
 			routineState.errorMessage = "Flywheel feedback device not found.";
 			return routineState;
 		}

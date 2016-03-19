@@ -11,7 +11,7 @@ public class TiltCommon extends Common
 	}
 
 
-	CANTalon tiltMotor;
+	protected CANTalon tiltMotor;
 
 
 	static int TILT_CHANNEL = 9;
