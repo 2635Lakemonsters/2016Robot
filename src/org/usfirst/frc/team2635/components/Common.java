@@ -7,16 +7,16 @@ import edu.wpi.first.wpilibj.Joystick;
  * @author Tristan
  *
  */
-public class Common  
+public  class Common  
 {
-	public Common(Joystick rightJoystick, Joystick leftJoystick)
+	public Common()
 	{
 		super();
-		this.rightJoystick = rightJoystick;
-		this.leftJoystick = leftJoystick;
+		rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
+		leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
 	}
-	public Joystick rightJoystick;
-	public Joystick leftJoystick;
+	public static Joystick rightJoystick;
+	public static Joystick leftJoystick;
 	
 	public static int JOYSTICK_LEFT_CHANNEL = 1;
 	public static int JOYSTICK_RIGHT_CHANNEL = 0;

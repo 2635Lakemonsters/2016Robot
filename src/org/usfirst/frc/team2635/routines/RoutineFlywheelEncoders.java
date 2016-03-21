@@ -1,12 +1,12 @@
 package org.usfirst.frc.team2635.routines;
 
-import org.usfirst.frc.team2635.components.FlywheelCommon;
+import static org.usfirst.frc.team2635.components.FlywheelCommon.*;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class RoutineFlywheelEncoders extends FlywheelCommon implements IRoutine 
+public class RoutineFlywheelEncoders implements IRoutine 
 {
 	public RoutineFlywheelEncoders()
 	{

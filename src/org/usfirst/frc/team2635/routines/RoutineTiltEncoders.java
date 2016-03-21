@@ -1,14 +1,14 @@
 package org.usfirst.frc.team2635.routines;
 
 
-import org.usfirst.frc.team2635.components.TiltCommon;
+import static org.usfirst.frc.team2635.components.TiltCommon.*;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDController;
 
 
-public class RoutineTiltEncoders extends TiltCommon implements IRoutine
+public class RoutineTiltEncoders implements IRoutine
 {
 	//Need this to get elevation data so the tilter doesn't tilt too soon.
 	CANTalon rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);

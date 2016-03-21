@@ -1,5 +1,7 @@
 package org.usfirst.frc.team2635.components;
 
+import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
+
 import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 
 import edu.wpi.first.wpilibj.CANTalon;
@@ -13,32 +15,31 @@ import edu.wpi.first.wpilibj.Joystick;
 public class DriveCommon extends Common 
 {
 
-	public DriveCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon rearRightMotor, CANTalon midRightMotor,
-			CANTalon frontRightMotor, CANTalon rearLeftMotor, CANTalon midLeftMotor, CANTalon frontLeftMotor,
-			BaseDrive robotDrive, double speedModeScaler)
+	public DriveCommon()
 	{
-		super(rightJoystick, leftJoystick);
-		this.rearRightMotor = rearRightMotor;
-		this.midRightMotor = midRightMotor;
-		this.frontRightMotor = frontRightMotor;
-		this.rearLeftMotor = rearLeftMotor;
-		this.midLeftMotor = midLeftMotor;
-		this.frontLeftMotor = frontLeftMotor;
-		this.robotDrive = robotDrive;
-		this.speedModeScaler = speedModeScaler;
+		super();
+		rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
+		midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+		frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+		rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+		midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
+		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
+
+		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
+		speedModeScaler = 1000;
 	}
-	public CANTalon rearRightMotor;
-	public CANTalon midRightMotor;
-	public CANTalon frontRightMotor;
+	public static CANTalon rearRightMotor;
+	public static CANTalon midRightMotor;
+	public static CANTalon frontRightMotor;
 	
-	public CANTalon rearLeftMotor;
-	public CANTalon midLeftMotor;
-	public CANTalon frontLeftMotor;
+	public static CANTalon rearLeftMotor;
+	public static CANTalon midLeftMotor;
+	public static CANTalon frontLeftMotor;
 	
 	/**
 	 * The type of robotDrive can change between states, so it needs to be initialized in the state, not DriveComponents
 	 */
-	public BaseDrive robotDrive;
+	public static BaseDrive robotDrive;
 
 	public static int REAR_RIGHT_CHANNEL = 1;
 	public static int MID_RIGHT_CHANNEL = 2;
@@ -56,6 +57,6 @@ public class DriveCommon extends Common
 	public static double DRIVE_P_DEFAULT = 0.2;
 	public static double DRIVE_I_DEFAULT = 0.001;
 	public static double DRIVE_D_DEFAULT = 0.0;
-	public double speedModeScaler = 1000.0;
+	public static double speedModeScaler = 1000.0;
 
 }

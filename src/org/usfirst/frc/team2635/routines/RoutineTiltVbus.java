@@ -1,10 +1,10 @@
 package org.usfirst.frc.team2635.routines;
 
-import org.usfirst.frc.team2635.components.TiltCommon;
+import static org.usfirst.frc.team2635.components.TiltCommon.*;
 
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
-public class RoutineTiltVbus extends TiltCommon implements IRoutine
+public class RoutineTiltVbus implements IRoutine
 {
 
 	public RoutineTiltVbus()

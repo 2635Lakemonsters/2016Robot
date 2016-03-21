@@ -85,8 +85,6 @@ public class Robot extends IterativeRobot
 	RoutineManager driveManager;
 	Joystick rightJoystick;
 	Joystick leftJoystick;
-	DigitalInput rightElevatorLimit = new DigitalInput(RIGHT_ELEVATOR_LIMIT_CHANNEL);
-	DigitalInput leftElevatorLimit = new DigitalInput(LEFT_ELEVATOR_LIMIT_CHANNEL);
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -140,7 +138,7 @@ public class Robot extends IterativeRobot
 	    rightJoystick = new Joystick(0);
 	    leftJoystick = new Joystick(1);
 	    flywheelManager = new RoutineManager(new RoutineFlywheelEncoders());
-	    elevatorManager = new RoutineManager(new RoutineElevatorEncoders(leftElevatorLimit, rightElevatorLimit));
+	    elevatorManager = new RoutineManager(new RoutineElevatorEncoders());
 	    tiltManager = new RoutineManager(new RoutineTiltEncoders());
 	    driveManager = new RoutineManager(new RoutineDriveVbus());
     }
@@ -200,7 +198,7 @@ public class Robot extends IterativeRobot
     	
     	if(leftJoystick.getRawButton(REZERO_BUTTON))
     	{
-    		flywheelManager.changeState(new RoutineZeroElevators(leftElevatorLimit, rightElevatorLimit));
+    		flywheelManager.changeState(new RoutineZeroElevators());
     		tiltManager.changeState(new RoutineZeroTilt());
     	}
     	if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
@@ -211,13 +209,13 @@ public class Robot extends IterativeRobot
     	if(rightJoystick.getRawButton(VOLTAGE_MODE_BUTTON))
     	{
     		flywheelManager.changeState(new RoutineFlywheelVBus());
-    		elevatorManager.changeState(new RoutineElevatorVbus(leftElevatorLimit, rightElevatorLimit));
+    		elevatorManager.changeState(new RoutineElevatorVbus());
     		tiltManager.changeState(new RoutineTiltVbus());
     	}
     	if(rightJoystick.getRawButton(SPEED_MODE_BUTTON))
     	{
     		flywheelManager.changeState(new RoutineFlywheelEncoders());
-    		elevatorManager.changeState(new RoutineElevatorEncoders(leftElevatorLimit, rightElevatorLimit));
+    		elevatorManager.changeState(new RoutineElevatorEncoders());
     		tiltManager.changeState(new RoutineTiltEncoders());
     	}
     	switch(flywheelState)
@@ -242,17 +240,17 @@ public class Robot extends IterativeRobot
     	{
 		case FAULT_ENCODER:
     		SmartDashboard.putBoolean(ELEVATOR_FAULT_KEY, true);
-    		elevatorManager.changeState(new RoutineElevatorVbus(leftElevatorLimit, rightElevatorLimit));
+    		elevatorManager.changeState(new RoutineElevatorVbus());
 			break;
 		case FAULT_MOTOR:
 			break;
 		case NO_FAULT:
 			break;
 		case ROUTINE_FINISHED:
-			elevatorManager.changeState(new RoutineElevatorEncoders(leftElevatorLimit, rightElevatorLimit));
+			elevatorManager.changeState(new RoutineElevatorEncoders());
 			break;
 		case ROUTINE_FINISHED_WITH_FAULT:
-			elevatorManager.changeState(new RoutineElevatorVbus(leftElevatorLimit, rightElevatorLimit));
+			elevatorManager.changeState(new RoutineElevatorVbus());
 		default:
 			break;
     	

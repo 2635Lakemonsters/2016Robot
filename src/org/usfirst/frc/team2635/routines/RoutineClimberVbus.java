@@ -1,7 +1,6 @@
-package org.usfirst.frc.team2635.robot;
+package org.usfirst.frc.team2635.routines;
 
 import org.usfirst.frc.team2635.components.ClimberCommon;
-import org.usfirst.frc.team2635.routines.IRoutine;
 
 public class RoutineClimberVbus extends ClimberCommon implements IRoutine
 {

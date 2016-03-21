@@ -5,21 +5,20 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.util.AllocationException;
 
-public class ElevatorCommon extends Common
+public  class ElevatorCommon extends Common
 {
-	public ElevatorCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon rightElevatorMotor,
-			CANTalon leftElevatorMotor, DigitalInput leftElevatorLimit, DigitalInput rightElevatorLimit)
+	public ElevatorCommon()
 	{
-		super(rightJoystick, leftJoystick);
-		this.rightElevatorMotor = rightElevatorMotor;
-		this.leftElevatorMotor = leftElevatorMotor;
-		this.leftElevatorLimit = leftElevatorLimit;
-		this.rightElevatorLimit = rightElevatorLimit;
+		super();
+		rightElevatorMotor = new CANTalon(RIGHT_ELEVATOR_CHANNEL);
+		leftElevatorMotor = new CANTalon(LEFT_ELEVATOR_CHANNEL);
+		leftElevatorLimit = new DigitalInput(LEFT_ELEVATOR_LIMIT_CHANNEL);
+		rightElevatorLimit = new DigitalInput(RIGHT_ELEVATOR_LIMIT_CHANNEL);
 	}
-	public CANTalon rightElevatorMotor;
-	public CANTalon leftElevatorMotor;
-	public DigitalInput leftElevatorLimit;
-	public DigitalInput rightElevatorLimit;
+	public static CANTalon rightElevatorMotor;
+	public static CANTalon leftElevatorMotor;
+	public static DigitalInput leftElevatorLimit;
+	public static DigitalInput rightElevatorLimit;
 	public static double ELEVATION_MAX = 45000.0; 
 	public static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 	
@@ -29,6 +28,9 @@ public class ElevatorCommon extends Common
 	public static int AIM_BUTTON = 3;
 	public static int RIGHT_ELEVATOR_CHANNEL = 10;
 	public static int LEFT_ELEVATOR_CHANNEL = 12;
+	static int LEFT_ELEVATOR_LIMIT_CHANNEL = 2;
+	static int RIGHT_ELEVATOR_LIMIT_CHANNEL = 3;
+
 	public static  String ELEVATOR_KEY_P = "Elevator P";
 	public static  String ELEVATOR_KEY_I = "Elevator I";
 	public static  String ELEVATOR_KEY_D = "Elevator D";

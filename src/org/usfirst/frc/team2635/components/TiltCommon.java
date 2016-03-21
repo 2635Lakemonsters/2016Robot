@@ -9,23 +9,22 @@ import edu.wpi.first.wpilibj.PIDController;
 public class TiltCommon extends Common
 {
 	
-	public TiltCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon tiltMotor, Encoder tiltEncoder,
-			PIDController tiltPID, DigitalInput tiltLimit)
+	public TiltCommon()
 	{
-		super(rightJoystick, leftJoystick);
-		this.tiltMotor = tiltMotor;
-		this.tiltEncoder = tiltEncoder;
-		this.tiltPID = tiltPID;
-		this.tiltLimit = tiltLimit;
+		super();
+		tiltMotor = new CANTalon(TILT_CHANNEL);
+		tiltEncoder = new Encoder(TILT_ENCODER_A, TILT_ENCODER_B);
+		tiltPID = new PIDController(CAMERA_Y_P_DEFAULT, CAMERA_Y_I_DEFAULT, CAMERA_Y_D_DEFAULT, tiltEncoder, tiltMotor);
+		tiltLimit = new DigitalInput(TILT_LIMIT_CHANNEL);
 	}
 
 	public static double TILT_MAX = -750.0; 
 
-	public CANTalon tiltMotor;
+	public static CANTalon tiltMotor;
 
-	public Encoder tiltEncoder;
-	public PIDController tiltPID;
-	public DigitalInput tiltLimit;
+	public static Encoder tiltEncoder;
+	public static PIDController tiltPID;
+	public static DigitalInput tiltLimit;
 
 	public static int TILT_ENCODER_A = 1;
 	public static int TILT_ENCODER_B = 0;

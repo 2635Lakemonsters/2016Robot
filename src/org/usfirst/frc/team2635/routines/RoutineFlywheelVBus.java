@@ -1,9 +1,9 @@
 package org.usfirst.frc.team2635.routines;
 
-import org.usfirst.frc.team2635.components.FlywheelCommon;
+import static org.usfirst.frc.team2635.components.FlywheelCommon.*;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
-public class RoutineFlywheelVBus extends FlywheelCommon implements IRoutine
+public class RoutineFlywheelVBus implements IRoutine
 {
 	public RoutineFlywheelVBus()
 	{

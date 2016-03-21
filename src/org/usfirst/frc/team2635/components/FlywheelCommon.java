@@ -4,6 +4,7 @@ import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
 import org.usfirst.frc.team2635.modules.Flywheel;
 
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
+import com.sun.org.glassfish.external.statistics.StringStatistic;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -18,24 +19,17 @@ import edu.wpi.first.wpilibj.PIDController;
  */
 public class FlywheelCommon extends Common
 {
-	
-	
-	
-
-
-
-	public FlywheelCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon rightFlywheelMotor,
-			CANTalon leftFlywheelMotor, CANTalon feedMotor)
+	public FlywheelCommon()
 	{
-		super(rightJoystick, leftJoystick);
-		this.rightFlywheelMotor = rightFlywheelMotor;
-		this.leftFlywheelMotor = leftFlywheelMotor;
-		this.feedMotor = feedMotor;
+		super();
+		rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
+		leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+		feedMotor = new CANTalon(FEED_CHANNEL);
 	}
-	public CANTalon rightFlywheelMotor;
-	public CANTalon leftFlywheelMotor;
+	public static CANTalon rightFlywheelMotor;
+	public static CANTalon leftFlywheelMotor;
 	
-	public CANTalon feedMotor;
+	public static CANTalon feedMotor;
 	public static String REZERO_KEY = "Reset encoders";
 	/**
 	 * Left Joystick
@@ -64,7 +58,7 @@ public class FlywheelCommon extends Common
 	public static double SHOOTER_ERROR = 3000.0;
 	public static int FIRE_BUTTON = 1;
 	public static int FEED_BUTTON = 2;
-	public void spinFlywheels(double speed)
+	public static void spinFlywheels(double speed)
 	{
 		rightFlywheelMotor.set(speed);
 		leftFlywheelMotor.set(-speed);

@@ -1,11 +1,11 @@
 package org.usfirst.frc.team2635.routines;
 
-import org.usfirst.frc.team2635.components.TiltCommon;
+import static org.usfirst.frc.team2635.components.TiltCommon.*;
 
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.Timer;
 
-public class RoutineZeroTilt extends TiltCommon implements IRoutine
+public class RoutineZeroTilt implements IRoutine
 {
 
 	private static final double REZERO_SPEED = 0.4;

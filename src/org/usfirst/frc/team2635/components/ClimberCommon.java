@@ -9,15 +9,15 @@ import edu.wpi.first.wpilibj.Joystick;
 
 public class ClimberCommon extends Common
 {
-	public CANTalon climberMotor;
+	public static CANTalon climberMotor;
 	public static final int CLIMBER_CHANNEL = 14;
 	
 	public static final int UP_BUTTON = 3;
 	public static final int DOWN_BUTTON = 2;
-	public ClimberCommon(Joystick rightJoystick, Joystick leftJoystick, CANTalon climberMotor)
+	public ClimberCommon()
 	{
-		super(rightJoystick, leftJoystick);
-		this.climberMotor = climberMotor;
+		super();
+		this.climberMotor = new CANTalon(CLIMBER_CHANNEL);
 	}
 	
 	
