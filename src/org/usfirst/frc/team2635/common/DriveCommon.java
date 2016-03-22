@@ -1,4 +1,4 @@
-package org.usfirst.frc.team2635.components;
+package org.usfirst.frc.team2635.common;
 
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
 
@@ -12,35 +12,26 @@ import edu.wpi.first.wpilibj.Joystick;
  * @author Tristan
  *
  */
-public class DriveCommon extends Common 
+public class DriveCommon 
 {
 
-	public DriveCommon()
-	{
-		super();
-		rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
-		midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
-		frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
-		rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
-		midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
-		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
-
-		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
-		speedModeScaler = 1000;
-	}
-	public static CANTalon rearRightMotor;
-	public static CANTalon midRightMotor;
-	public static CANTalon frontRightMotor;
-	
-	public static CANTalon rearLeftMotor;
-	public static CANTalon midLeftMotor;
-	public static CANTalon frontLeftMotor;
-	
 	/**
 	 * The type of robotDrive can change between states, so it needs to be initialized in the state, not DriveComponents
 	 */
-	public static BaseDrive robotDrive;
+	public static void init()
+	{
 
+		rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
+		midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
+		frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+		
+		rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
+		midLeftMotor  = new CANTalon(MID_LEFT_CHANNEL);
+		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
+
+		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);;
+
+	}
 	public static int REAR_RIGHT_CHANNEL = 1;
 	public static int MID_RIGHT_CHANNEL = 2;
 	public static int FRONT_RIGHT_CHANNEL = 3;
@@ -49,7 +40,15 @@ public class DriveCommon extends Common
 	public static int MID_LEFT_CHANNEL = 5;
 	public static int FRONT_LEFT_CHANNEL = 6;
 	
+	public static CANTalon rearRightMotor;
+	public static CANTalon midRightMotor;
+	public static CANTalon frontRightMotor;
 	
+	public static CANTalon rearLeftMotor;
+	public static CANTalon midLeftMotor;
+	public static CANTalon frontLeftMotor;
+
+	public static BaseDrive robotDrive;	
 	public static String DRIVE_KEY_P = "Drive P";
 	public static String DRIVE_KEY_I = "Drive I";
 	public static String DRIVE_KEY_D = "Drive D";

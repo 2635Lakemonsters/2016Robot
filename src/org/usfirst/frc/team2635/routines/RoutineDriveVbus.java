@@ -1,7 +1,14 @@
 package org.usfirst.frc.team2635.routines;
 
+import static org.usfirst.frc.team2635.common.DriveCommon.*;
+
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
-import static org.usfirst.frc.team2635.components.DriveCommon.*;
+
+import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
+
+import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
+
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
 public class RoutineDriveVbus implements IRoutine

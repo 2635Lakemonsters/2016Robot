@@ -4,7 +4,7 @@ import org.usfirst.frc.team2635.routines.IRoutine.RoutineState;
 
 public class RoutineManager
 {
-	IRoutine currentRoutine;
+	public IRoutine currentRoutine;
 	public void changeState(IRoutine newState)
 	{
 		currentRoutine.cleanup();

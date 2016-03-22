@@ -1,8 +1,10 @@
 package org.usfirst.frc.team2635.routines;
 
-import static org.usfirst.frc.team2635.components.ElevatorCommon.*;
-
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import static org.usfirst.frc.team2635.common.ElevatorCommon.*;
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
 import edu.wpi.first.wpilibj.DigitalInput;
 public class RoutineElevatorVbus implements IRoutine
 {
@@ -17,8 +19,10 @@ public class RoutineElevatorVbus implements IRoutine
 	@Override
 	public RoutineState run() 
 	{
+		SmartDashboard.putNumber("Right elevator encoder", rightElevatorMotor.getPosition());
+		SmartDashboard.putNumber("Left elevator encoder", leftElevatorMotor.getPosition());
 		boolean limitHit = !rightElevatorLimit.get() || !leftElevatorLimit.get();
-		
+		SmartDashboard.putBoolean("Elevator limit hit", limitHit);
 		if(limitHit)
 		{
 			rightElevatorMotor.setPosition(0.0);
@@ -27,13 +31,13 @@ public class RoutineElevatorVbus implements IRoutine
 		
 		if(rightJoystick.getRawButton(ELEVATE_UP_BUTTON))
 		{
-			rightElevatorMotor.set(1.0);
-			leftElevatorMotor.set(1.0);
+			rightElevatorMotor.set(-1.0);
+			leftElevatorMotor.set(-1.0);
 		}
 		else if(rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON))
 		{
-			rightElevatorMotor.set(-0.7);
-			leftElevatorMotor.set(-0.7);
+			rightElevatorMotor.set(0.7);
+			leftElevatorMotor.set(0.7);
 		}
 		else
 		{

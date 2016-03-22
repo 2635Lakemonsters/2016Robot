@@ -1,15 +1,6 @@
 
 package org.usfirst.frc.team2635.robot;
 
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
-import org.usfirst.frc.team2635.modules.ActuatorTwoMotor;
-import org.usfirst.frc.team2635.modules.DriveThreeMotor;
-import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
-import org.usfirst.frc.team2635.modules.Flywheel;
-import org.usfirst.frc.team2635.modules.PIDOutputThreeMotorRotate;
-import org.usfirst.frc.team2635.modules.SensorCANTalonPIDError;
-import org.usfirst.frc.team2635.modules.SensorThreeAND;
 import org.usfirst.frc.team2635.routines.RoutineDriveVbus;
 import org.usfirst.frc.team2635.routines.RoutineElevatorEncoders;
 import org.usfirst.frc.team2635.routines.RoutineElevatorVbus;
@@ -21,43 +12,23 @@ import org.usfirst.frc.team2635.routines.RoutineTiltVbus;
 import org.usfirst.frc.team2635.routines.RoutineZeroElevators;
 import org.usfirst.frc.team2635.routines.RoutineZeroTilt;
 import org.usfirst.frc.team2635.routines.IRoutine.RoutineState;
-import org.usfirst.frc.team2635.modules.SensorNavxAngle;
-
-import com.kauailabs.navx.frc.AHRS;
-import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.lakemonsters2635.actuator.modules.ActuatorClosedLoop;
-import com.lakemonsters2635.actuator.modules.ActuatorSimple;
-import com.lakemonsters2635.sensor.interfaces.BaseSensor;
-import com.lakemonsters2635.sensor.modules.SensorHitTest;
-import com.lakemonsters2635.sensor.modules.SensorOneShot;
-import com.lakemonsters2635.sensor.modules.SensorRawButton;
-import com.lakemonsters2635.sensor.modules.SensorTargetAngleFromImage;
-import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
-import com.lakemonsters2635.util.ImageGrabber;
-import com.ni.vision.NIVision;
-
-import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.SampleRobot;
-import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
-import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.vision.USBCamera;
 
 import static org.usfirst.frc.team2635.robot.Constants.Drive.*;
 import static org.usfirst.frc.team2635.robot.Constants.Camera.*;
 import static org.usfirst.frc.team2635.robot.Constants.Climber.*;
 import static org.usfirst.frc.team2635.robot.Constants.Shooter.*;
 
-import java.net.NetworkInterface;
+import org.usfirst.frc.team2635.common.ClimberCommon;
+import org.usfirst.frc.team2635.common.ControlCommon;
+import org.usfirst.frc.team2635.common.DriveCommon;
+import org.usfirst.frc.team2635.common.ElevatorCommon;
+import org.usfirst.frc.team2635.common.FlywheelCommon;
+import org.usfirst.frc.team2635.common.TiltCommon;
 
 import static org.usfirst.frc.team2635.robot.Constants.Autonomous.*;
 
@@ -85,7 +56,8 @@ public class Robot extends IterativeRobot
 	RoutineManager driveManager;
 	Joystick rightJoystick;
 	Joystick leftJoystick;
-	
+	boolean flagElevatorZero = false;
+	boolean flagTiltZero = false;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -134,7 +106,13 @@ public class Robot extends IterativeRobot
     {
     	
 	    //if the robot throws a null pointer exception, its probably because something didn't get initialized in here! Check the error thrown (RioLog should have it if the driver station doesn't) to get more info
-	    smartDashboardInit();
+    	ClimberCommon.init();
+    	ControlCommon.init();
+    	DriveCommon.init();
+    	ElevatorCommon.init();
+    	FlywheelCommon.init();
+    	TiltCommon.init();
+    	smartDashboardInit();
 	    rightJoystick = new Joystick(0);
 	    leftJoystick = new Joystick(1);
 	    flywheelManager = new RoutineManager(new RoutineFlywheelEncoders());
@@ -186,24 +164,59 @@ public class Robot extends IterativeRobot
      * @param tiltAngle Angle to tilt the shooter to. This should be calculated in cameraTeleop()
      * @param teleopMode
      */
-
+    public void rezero()
+    {
+    	
+    }
     @Override
 	public void teleopPeriodic() 
     {
+    	NetworkTable.flush();
     	RoutineState flywheelState = flywheelManager.runRoutine();
     	RoutineState elevatorState = elevatorManager.runRoutine();
     	RoutineState tiltState = tiltManager.runRoutine();
-    	
+    	SmartDashboard.putString("Flywheel state", flywheelManager.currentRoutine.getClass().getSimpleName());
+    	SmartDashboard.putString("Elevator state", elevatorManager.currentRoutine.getClass().getSimpleName());
+    	SmartDashboard.putString("Tilt state", tiltManager.currentRoutine.getClass().getSimpleName());
+    	SmartDashboard.putBoolean("Right limit", ElevatorCommon.rightElevatorLimit.get());
+    	SmartDashboard.putBoolean("Left limit", ElevatorCommon.leftElevatorLimit.get());
+    	SmartDashboard.putNumber("Right encoder", ElevatorCommon.rightElevatorMotor.getPosition());
+    	SmartDashboard.putNumber("Left encoder", ElevatorCommon.leftElevatorMotor.getPosition());
+    	SmartDashboard.putString("Elevator state", elevatorState.toString());
     	//RoutineState driveState = driveManager.runRoutine();
+    	
     	
     	if(leftJoystick.getRawButton(REZERO_BUTTON))
     	{
-    		flywheelManager.changeState(new RoutineZeroElevators());
     		tiltManager.changeState(new RoutineZeroTilt());
+    		while(true)
+    		{
+    			RoutineState tiltZeroState = tiltManager.runRoutine();
+    			if(tiltZeroState == RoutineState.ROUTINE_FINISHED || tiltZeroState == RoutineState.ROUTINE_FINISHED_WITH_FAULT)
+    			{
+    				break;
+    			}
+    		}
+    		Timer timer = new Timer();
+    		timer.reset();
+    		timer.start();
+    		while(!timer.hasPeriodPassed(2.0)){}
+    		elevatorManager.changeState(new RoutineZeroElevators());
+    		while(true)
+    		{
+    			RoutineState elevatorZeroState = elevatorManager.runRoutine();
+    			if(elevatorZeroState == RoutineState.ROUTINE_FINISHED || elevatorZeroState == RoutineState.ROUTINE_FINISHED_WITH_FAULT)
+    			{
+    				break;
+    			}
+    		}
+    		
+    		tiltManager.changeState(new RoutineTiltEncoders());
+    		elevatorManager.changeState(new RoutineElevatorEncoders());
     	}
     	if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
     	{
-    		flywheelManager.changeState(new RoutineFlywheelVBus());
+    		elevatorManager.changeState(new RoutineElevatorVbus());
     		tiltManager.changeState(new RoutineTiltVbus());
     	}
     	if(rightJoystick.getRawButton(VOLTAGE_MODE_BUTTON))

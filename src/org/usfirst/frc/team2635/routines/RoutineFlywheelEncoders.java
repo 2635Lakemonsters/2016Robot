@@ -1,6 +1,8 @@
 package org.usfirst.frc.team2635.routines;
 
-import static org.usfirst.frc.team2635.components.FlywheelCommon.*;
+import static org.usfirst.frc.team2635.common.FlywheelCommon.*;
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
+
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
@@ -32,20 +34,25 @@ public class RoutineFlywheelEncoders implements IRoutine
 		SmartDashboard.putString("Left flywheel encoder status", leftFlywheelStatus.toString());
 		SmartDashboard.putString("Right flywheel encoder status", rightFlywheelStatus.toString());
 		//TODO Experimental
-		if(leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown 
-				|| rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusUnknown)
+		if(leftFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent
+				|| rightFlywheelStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent)
 		{
 			routineState = RoutineState.FAULT_ENCODER;
 			routineState.errorMessage = "Flywheel feedback device not found.";
 			return routineState;
 		}
-		
+		SmartDashboard.putNumber("FlywheelError", rightFlywheelMotor.getError());
 		if(rightJoystick.getRawButton(FIRE_BUTTON))
 		{
 			spinFlywheels(FIRE_SPEED);
-			if(Math.abs(rightFlywheelMotor.getError()) < 3000.0)
+			//The error curves in a parabola, so make sure the check is in the second half
+			if(Math.abs(rightFlywheelMotor.getError()) < 100.0)
 			{
 				feedMotor.set(1.0);
+			}
+			else 
+			{
+				feedMotor.set(0.0);
 			}
 			
 		}

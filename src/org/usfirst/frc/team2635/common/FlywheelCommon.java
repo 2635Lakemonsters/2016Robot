@@ -1,35 +1,23 @@
-package org.usfirst.frc.team2635.components;
-
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
-import org.usfirst.frc.team2635.modules.Flywheel;
-
-import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.sun.org.glassfish.external.statistics.StringStatistic;
+package org.usfirst.frc.team2635.common;
 
 import edu.wpi.first.wpilibj.CANTalon;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PIDController;
 
 /**
  * Container class for all of the components and constants that go into a shooter.
  * @author Tristan
  *
  */
-public class FlywheelCommon extends Common
+public class FlywheelCommon 
 {
-	public FlywheelCommon()
+	
+	public static void init()
 	{
-		super();
 		rightFlywheelMotor = new CANTalon(RIGHT_FLYWHEEL_CHANNEL);
 		leftFlywheelMotor = new CANTalon(LEFT_FLYWHEEL_CHANNEL);
+		leftFlywheelMotor.reverseSensor(true);
 		feedMotor = new CANTalon(FEED_CHANNEL);
+
 	}
-	public static CANTalon rightFlywheelMotor;
-	public static CANTalon leftFlywheelMotor;
-	
-	public static CANTalon feedMotor;
 	public static String REZERO_KEY = "Reset encoders";
 	/**
 	 * Left Joystick
@@ -58,6 +46,10 @@ public class FlywheelCommon extends Common
 	public static double SHOOTER_ERROR = 3000.0;
 	public static int FIRE_BUTTON = 1;
 	public static int FEED_BUTTON = 2;
+	public static CANTalon rightFlywheelMotor;
+	public static CANTalon leftFlywheelMotor;
+	
+	public static CANTalon feedMotor;
 	public static void spinFlywheels(double speed)
 	{
 		rightFlywheelMotor.set(speed);

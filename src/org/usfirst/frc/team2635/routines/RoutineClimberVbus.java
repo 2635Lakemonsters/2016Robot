@@ -1,8 +1,9 @@
 package org.usfirst.frc.team2635.routines;
 
-import org.usfirst.frc.team2635.components.ClimberCommon;
+import static org.usfirst.frc.team2635.common.ClimberCommon.*;
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
 
-public class RoutineClimberVbus extends ClimberCommon implements IRoutine
+public class RoutineClimberVbus  implements IRoutine
 {
 
 	@Override

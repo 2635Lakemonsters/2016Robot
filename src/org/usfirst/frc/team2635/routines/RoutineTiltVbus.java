@@ -1,6 +1,8 @@
 package org.usfirst.frc.team2635.routines;
 
-import static org.usfirst.frc.team2635.components.TiltCommon.*;
+import static org.usfirst.frc.team2635.common.TiltCommon.*;
+
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
 
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
@@ -19,6 +21,11 @@ public class RoutineTiltVbus implements IRoutine
 	@Override
 	public RoutineState run()
 	{
+		
+		if(!tiltLimit.get())
+		{
+			tiltEncoder.reset();
+		}
 		if(rightJoystick.getRawButton(TILT_UP_BUTTON))
 		{
 			tiltMotor.set(TILT_SPEED);

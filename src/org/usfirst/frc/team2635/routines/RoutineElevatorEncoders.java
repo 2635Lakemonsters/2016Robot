@@ -1,16 +1,21 @@
 package org.usfirst.frc.team2635.routines;
 
 
+import static org.usfirst.frc.team2635.common.ElevatorCommon.*;
+
+import org.usfirst.frc.team2635.common.ControlCommon;
+
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
 import com.lakemonsters2635.sensor.modules.SensorOneShot;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDeviceStatus;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
-import static org.usfirst.frc.team2635.components.ElevatorCommon.*;
 public class RoutineElevatorEncoders implements IRoutine
 {
-	double elevation = 0;
+	double elevation = rightElevatorMotor.getPosition();
 	boolean elevationState = false;
 	SensorOneShot aimOneShot = new SensorOneShot(false);
 	SensorOneShot initOneShot = new SensorOneShot(false);
@@ -31,8 +36,8 @@ public class RoutineElevatorEncoders implements IRoutine
 		FeedbackDeviceStatus rightStatus = rightElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		FeedbackDeviceStatus leftStatus = leftElevatorMotor.isSensorPresent(FeedbackDevice.QuadEncoder);
 		
-		boolean encodersNotConnected = rightStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || rightStatus == FeedbackDeviceStatus.FeedbackStatusUnknown 
-				|| leftStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent || leftStatus == FeedbackDeviceStatus.FeedbackStatusUnknown;
+		boolean encodersNotConnected = rightStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent
+				|| leftStatus == FeedbackDeviceStatus.FeedbackStatusNotPresent ;
 		if(encodersNotConnected)
 		{
 			return RoutineState.FAULT_ENCODER;
@@ -40,7 +45,6 @@ public class RoutineElevatorEncoders implements IRoutine
 		
 		boolean rightLimitHit = !rightElevatorLimit.get();
 		boolean leftLimitHit = !leftElevatorLimit.get();
-		
 		if(rightLimitHit || leftLimitHit)
 		{
 			rightElevatorMotor.setPosition(0.0);
@@ -52,11 +56,20 @@ public class RoutineElevatorEncoders implements IRoutine
 			//Toggle between up and down
 			if(elevationState == false)
 			{
+				rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+				rightElevatorMotor.clearIAccum();
+				leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+				leftElevatorMotor.clearIAccum();
 				elevation = ELEVATION_MAX;
 				elevationState = true;
 			}
 			else
 			{
+				
+				rightElevatorMotor.setPID(0.01, 0.00005, 0.0);
+				rightElevatorMotor.ClearIaccum();
+				leftElevatorMotor.setPID(0.01, 0.00005, 0.0);
+				leftElevatorMotor.ClearIaccum();
 				elevation = 0.0;
 				elevationState = false;
 			}

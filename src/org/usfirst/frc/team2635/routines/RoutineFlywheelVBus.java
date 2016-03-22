@@ -1,7 +1,12 @@
 package org.usfirst.frc.team2635.routines;
 
-import static org.usfirst.frc.team2635.components.FlywheelCommon.*;
+import static org.usfirst.frc.team2635.common.FlywheelCommon.*;
+
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import static org.usfirst.frc.team2635.common.ControlCommon.*;
+
 
 public class RoutineFlywheelVBus implements IRoutine
 {
@@ -17,7 +22,8 @@ public class RoutineFlywheelVBus implements IRoutine
 	@Override
 	public RoutineState run()
 	{
-		
+		SmartDashboard.putNumber("Right shooter encoder", rightFlywheelMotor.getSpeed());
+		SmartDashboard.putNumber("Left shooter encoder", leftFlywheelMotor.getSpeed());
 		if(rightJoystick.getRawButton(FIRE_BUTTON))
 		{
 			spinFlywheels(FIRE_SPEED);
