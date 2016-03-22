@@ -49,9 +49,9 @@ public class Flywheel
 		
 		//Get into firing position
 		
-		elevator.actuate(elevateMagnitude);
+		//elevator.actuate(elevateMagnitude);
 		
-		tilter.actuate(tiltMagnitude);
+		//tilter.actuate(tiltMagnitude);
 		
 		//Check if the launcher is ready to fire or not
 		if(canFireSensor.sense(null))

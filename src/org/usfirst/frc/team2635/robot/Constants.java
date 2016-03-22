@@ -80,7 +80,7 @@ public final class Constants
 		static  String ELEVATOR_KEY_I = "Elevator I";
 		static  String ELEVATOR_KEY_D = "Elevator D";
 		
-		static  double ELEVATOR_P_DEFAULT = 0.15;
+		static  double ELEVATOR_P_DEFAULT = 0.8;
 		static  double ELEVATOR_I_DEFAULT = 0.0001;
 		static  double ELEVATOR_D_DEFAULT = 0.0;
 
@@ -89,7 +89,7 @@ public final class Constants
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
 		static double SHOOTER_P_DEFAULT = 0.1;
-		static double SHOOTER_I_DEFAULT = 0.0001;
+		static double SHOOTER_I_DEFAULT = 0.00015;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
 		static String SHOOTER_SPEED_KEY = "ShooterSpeed";
@@ -108,14 +108,14 @@ public final class Constants
 		static boolean elevatorFault = false;
 		static boolean shooterFault = false;
 		
-		static int RIGHT_FLYWHEEL_CHANNEL = 10;
+		static int RIGHT_FLYWHEEL_CHANNEL = 13;
 		static int LEFT_FLYWHEEL_CHANNEL = 7;
 	
 		static int TILT_CHANNEL = 9;
 		static int TILT_ENCODER_A = 1;
 		static int TILT_ENCODER_B = 0;
 		
-		static int RIGHT_ELEVATOR_CHANNEL = 13;
+		static int RIGHT_ELEVATOR_CHANNEL = 10;
 		static int LEFT_ELEVATOR_CHANNEL = 12;
 		
 		static int LEFT_ELEVATOR_LIMIT_CHANNEL = 2;
@@ -123,7 +123,7 @@ public final class Constants
 		
 		static int TILT_LIMIT_CHANNEL = 4;
 		
-		static double REZERO_SPEED = -0.3;
+		static double REZERO_SPEED = -0.2;
 		
 		static int FEED_CHANNEL = 11;
 		
@@ -145,7 +145,7 @@ public final class Constants
 		
 		static double ELEVATION_MAX = 45000.0; 
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
-		
+		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
 		static double SHOOTER_ERROR = 3000.0;
 		static double TILT_ERROR = 10.0;
@@ -157,6 +157,7 @@ public final class Constants
 		//static  int LOAD_BACK_BUTTON = 4;
 		static  int ELEVATE_UP_BUTTON = 11;
 		static  int ELEVATE_DOWN_BUTTON = 10;
+		static int STARTING_BUTTON = 6;
 	}
 	public static class Climber
 	{

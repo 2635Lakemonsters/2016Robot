@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
@@ -157,22 +158,16 @@ public class Robot extends IterativeRobot
 	}
 	public void driveConfigVbus()
 	{
-    	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);
     	rearRightMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-    	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
     	midRightMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-    	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
     	frontRightMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-    	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
     	rearLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-    	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
     	midLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
-		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);
     	frontLeftMotor.changeControlMode(TalonControlMode.PercentVbus);
 
 	}
@@ -185,15 +180,8 @@ public class Robot extends IterativeRobot
     	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
 		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
 
-		if(setupMode == FunctionalityMode.Competition || setupMode == FunctionalityMode.Debug_Encoder)
-		{
-			driveConfigEncoder();
-			robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
-		}
-		else if(setupMode == FunctionalityMode.Debug_Vbus)
-		{
+
 			driveConfigVbus();
-		}
 		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
     	rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
     	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
@@ -238,11 +226,11 @@ public class Robot extends IterativeRobot
     		ELEVATE_DOWN_SPEED = -1000.0;
     		ELEVATE_UP_SPEED = 1000.0;
     		FIRE_SPEED = -50000.0;
-    		FEED_SPEED = -FIRE_SPEED / 2.5;
+    		FEED_SPEED = -FIRE_SPEED / 2;
 
     		
 	    	elevateOneShot = new SensorOneShot(false);
-    	
+	    	//rightFlywheelMotor.
 	    	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
 	    	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
 	    	rightFlywheelMotor.reverseSensor(true);
@@ -277,28 +265,35 @@ public class Robot extends IterativeRobot
 	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor), 
 	    			new ActuatorSimple(feedMotor), 
 	    			new ActuatorLauncherFeedInvertRight(leftFlywheelMotor, rightFlywheelMotor, feedMotor),
-	    			new SensorThreeAND(
-	    					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
-	    					new SensorHitTest(new SensorCANTalonPIDError(rightElevatorMotor), ELEVATION_ERROR, -ELEVATION_ERROR),
-	    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
-	    			),
+					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
+//	    			new SensorThreeAND(
+//	    					new SensorHitTest(new SensorCANTalonPIDError(rightFlywheelMotor), SHOOTER_ERROR, -SHOOTER_ERROR),
+//	    					new SensorHitTest(new SensorCANTalonPIDError(rightElevatorMotor), ELEVATION_ERROR, -ELEVATION_ERROR),
+//	    					new SensorHitTest(new SensorCANTalonPIDError(tiltMotor), TILT_ERROR, -TILT_ERROR)
+//	    			),
 	    			new ActuatorTwoMotor(leftElevatorMotor, rightElevatorMotor),
 	    			new ActuatorClosedLoop(tiltPID)
 	    	
 	    	);
 
 	}
-	public void rezeroTilt()
+	public boolean rezeroTilt()
 	{
 		
 		tiltPID.disable();
 		tiltMotor.set(-REZERO_SPEED);
+		Timer timer = new Timer();
+		timer.start();
+		double startTime = timer.get();
+
 		while(true)
 		{
-			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
+			
+			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON) || timer.get() - startTime > 2.0)
 			{
+				
 				tiltMotor.set(0.0);
-				return;
+				return false;
 			}
 			boolean limitHit = !tiltLimit.get();
 			if(limitHit)
@@ -306,44 +301,54 @@ public class Robot extends IterativeRobot
 				tiltMotor.set(0.0);
 				tiltEncoder.reset();
 				tiltPID.enable();
-				return;
+				tiltPID.setSetpoint(-100.0);
+				return true;
 			}
 		}
 	}
-	public void rezeroElevator()
+	public boolean rezeroElevator()
 	{
 		shooterConfigVbus();
+		Timer timer = new Timer();
+		
+		runMode = FunctionalityMode.Debug_Vbus;
 		rightElevatorMotor.set(REZERO_SPEED);
 		leftElevatorMotor.set(REZERO_SPEED);
+		timer.start();
+		double startTime = timer.get();
+
 		while(true)
 		{
 			//TODO: add in time limit for autonomous
 			//If the limit switches break, the robot could enter a broken state, so be able to exit rezeroing.
-			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON))
+			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON)|| timer.get() - startTime > 2.0)
 			{
+
 				rightElevatorMotor.set(0.0);
 				leftElevatorMotor.set(0.0);
 				//Robot is in Vbus mode now.
-				return;
+				return false;
 			}
-			boolean leftLimitHit = !leftElevatorLimit.get();
+			//boolean leftLimitHit = !leftElevatorLimit.get();
 			boolean rightLimitHit = !rightElevatorLimit.get();
-			if(leftLimitHit)
-			{
-				leftElevatorMotor.set(0.0);
-				leftElevatorMotor.setPosition(0.0);
-			}
+//			if(leftLimitHit)
+//			{
+//				leftElevatorMotor.set(0.0);
+//				leftElevatorMotor.setPosition(0.0);
+//			}
 			if(rightLimitHit)
 			{
 				rightElevatorMotor.set(0.0);
 				rightElevatorMotor.setPosition(0.0);
 			}
-			if(leftLimitHit && rightLimitHit)
+			if(rightLimitHit)
 			{
 				break;
 			}
 		}
+		runMode = FunctionalityMode.Competition;
 		shooterConfigEncoder(false);
+		return true;
 	}
     public void shooterInit(FunctionalityMode setupMode)
     {
@@ -376,6 +381,7 @@ public class Robot extends IterativeRobot
 
 	    	if(setupMode == FunctionalityMode.Competition)
 	    	{
+	    		
 	    		shooterConfigEncoder(true);
 	    	}
 //	    	if(setupMode == FunctionalityMode.Debug_Encoder)
@@ -507,11 +513,26 @@ public class Robot extends IterativeRobot
 	 * You can add additional auto modes by adding additional comparisons to the switch structure below with additional strings.
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
+    
+    Timer autoTimer = new Timer();
+    double autoStartTime;
+    boolean doAuto = true;
     @Override
+    
 	public void autonomousInit() 
     {
-    	frontRightMotor.changeControlMode(TalonControlMode.Position);
-    	frontLeftMotor.changeControlMode(TalonControlMode.Position);
+    	
+    	doAuto  &= rezeroTilt();
+		Timer timer = new Timer();
+		timer.start();
+		double startTime = timer.get();
+		while(timer.get() - startTime < 0.3){}
+		doAuto &= rezeroElevator();
+		
+		autoTimer.reset();
+		autoTimer.start();
+		autoStartTime = autoTimer.get();
+		robotDrive.drive(1.0, -1.0);
     }
 
     /**
@@ -520,10 +541,9 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousPeriodic() 
     {
-    	if(SmartDashboard.getBoolean(AUTO_KEY))
+    	if(autoTimer.get() > 4.0 || !doAuto)
     	{
-    		//Drive forward whatever distance it is to cross the defense,
-    		//Drive backwards to position
+    		robotDrive.drive(0, 0);
     	}
     }
 
@@ -573,7 +593,6 @@ public class Robot extends IterativeRobot
 	    	if(findTargetAngle && cameraExists)
 	    	{
 	    		//Need to find angle based upon a fully elevated shooter.
-	    		flywheel.elevate(ELEVATION_MAX);
 	    		//TODO: May want to wrap this logic into a couple of modules and put them in the PIDDrive class. Do this after basic functionality is established
 	    		//TODO: Will probably want to add some logic to block untill the flywheel is elevated
 	    		if(!cameraXPID.isEnabled())
@@ -610,8 +629,6 @@ public class Robot extends IterativeRobot
     	else
     	{
 	    	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
-	    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
-	    	flywheel.elevate(ELEVATION_MAX);
 	    	return tiltAngle;
     	}
     }
@@ -625,7 +642,27 @@ public class Robot extends IterativeRobot
     	if(leftJoystick.getRawButton(REZERO_BUTTON))
     	{
     		rezeroTilt();
+    		Timer timer = new Timer();
+    		timer.start();
+    		double startTime = timer.get();
+    		while(timer.get() - startTime < 0.3){}
     		rezeroElevator();
+    	}
+    	//boolean leftElevatorLimitHit = !leftElevatorLimit.get();
+    	boolean rightElevatorLimitHit = !rightElevatorLimit.get();
+    	boolean tiltLimitHit = !tiltLimit.get();
+    	
+    	
+    	if (rightElevatorLimitHit)
+    	{
+    		leftElevatorMotor.setPosition(0.0);
+    		rightElevatorMotor.setPosition(0.0);
+    		
+    	}
+    	
+    	if(tiltLimitHit)
+    	{
+    		tiltEncoder.reset();
     	}
     	if(teleopMode == FunctionalityMode.Competition)
     	{
@@ -633,29 +670,15 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putBoolean(SHOOTER_FAULT_KEY, shooterFault);
     		SmartDashboard.putBoolean(ELEVATOR_FAULT_KEY, elevatorFault);
     		//TODO: Might want to make this optional
-        	boolean leftElevatorLimitHit = !leftElevatorLimit.get();
-        	boolean rightElevatorLimitHit = !rightElevatorLimit.get();
-        	boolean tiltLimitHit = !tiltLimit.get();
         	
-        	
-        	if(leftElevatorLimitHit)
-        	{
-        		leftElevatorMotor.setPosition(0.0);
-        	}
-        	if(rightElevatorLimitHit)
-        	{
-        		rightElevatorMotor.setPosition(0.0);
-        	}
-        	if(tiltLimitHit)
-        	{
-        		tiltEncoder.reset();
-        	}
     		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 	    	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
 	    	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
 	    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
 	    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
+	    	boolean start = leftJoystick.getRawButton(STARTING_BUTTON);
 	    	//Only tilt if the shooter is clear from the chassis
+	    	
 	    	
 	    	//TODO: It might be good to put in a more robust object system for each subsystem of the robot, but let's worry about that later.
 	    	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
@@ -714,15 +737,26 @@ public class Robot extends IterativeRobot
 	    		{
 	    			elevatorPosition += ELEVATE_DOWN_SPEED;
 	    		}
+	    		else if(start)
+	    		{
+	    			elevatorPosition = ELEVATION_START;
+	    		}
 	    		if(aim)
 	    		{
 	    			if(elevatorState == true)
 	    			{
 	    				elevatorPosition = 0;
 	    				elevatorState = false;
+	    				rezeroTilt();
+	    	    		Timer timer = new Timer();
+	    	    		timer.start();
+	    	    		double startTime = timer.get();
+	    	    		while(timer.get() - startTime < 0.3){}
+	    	    		rezeroElevator();
 	    			}
 	    			else
 	    			{
+
 	    				elevatorPosition = ELEVATION_MAX;
 	    				elevatorState = true;
 	    			}
@@ -894,8 +928,11 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());    		
     		SmartDashboard.putNumber("Tilt setpoint", tiltPID.getSetpoint());
     		
+    		SmartDashboard.putNumber("Right Elevator Current", rightElevatorMotor.getOutputCurrent());
+    		SmartDashboard.putNumber("Left Elevator Current", leftElevatorMotor.getOutputCurrent());
     		SmartDashboard.putBoolean("Left limit", leftElevatorLimit.get());
     		SmartDashboard.putBoolean("Right limit", rightElevatorLimit.get());
+    		SmartDashboard.putBoolean("Tilt limit", tiltLimit.get());
     		SmartDashboard.putNumber(ELEVATION_KEY, (rightElevatorMotor.getPosition() + leftElevatorMotor.getPosition()) / 2);
 	    	SmartDashboard.putNumber(TILT_KEY, tiltEncoder.getDistance());
 	    	SmartDashboard.putNumber(SHOOTER_SPEED_KEY, (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2);
@@ -915,7 +952,7 @@ public class Robot extends IterativeRobot
     		{
     			
     			runMode = FunctionalityMode.Competition;
-    			shooterConfigEncoder(false);
+    			shooterConfigEncoder(true);
     			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
     		}
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
