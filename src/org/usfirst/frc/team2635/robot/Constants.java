@@ -47,6 +47,8 @@ public final class Constants
 		static  String CAMERA_Y_KEY_I = "Camera Y I";
 		static  String CAMERA_Y_KEY_D = "Camera Y D";
 		
+		static String CAMERA_MODE_KEY = "CameraMode";
+		
 	    static  double CAMERA_X_P_DEFAULT = 0.02;
 	    static  double CAMERA_X_I_DEFAULT = 0.0006;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
@@ -63,6 +65,7 @@ public final class Constants
 		static  NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
 		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
 		static  double PARTICLE_AREA_MINIMUM = 0.5;
+		
 	}
 	public static class Shooter
 	{
@@ -123,7 +126,7 @@ public final class Constants
 		
 		static int TILT_LIMIT_CHANNEL = 4;
 		
-		static double REZERO_SPEED = -0.2;
+		static double REZERO_SPEED = 0.4;
 		
 		static int FEED_CHANNEL = 11;
 		
@@ -147,13 +150,14 @@ public final class Constants
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR = 3000.0;
+		static double SHOOTER_ERROR = 500.0;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
 		static  int AIM_BUTTON = 3;
 		static  int FIRE_BUTTON = 1;
 		static  int LOAD_FRONT_BUTTON = 2;
+		static int AIM_CAMERA_BUTTON = 5;
 		//static  int LOAD_BACK_BUTTON = 4;
 		static  int ELEVATE_UP_BUTTON = 11;
 		static  int ELEVATE_DOWN_BUTTON = 10;
