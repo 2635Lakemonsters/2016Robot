@@ -27,6 +27,7 @@ import com.lakemonsters2635.util.ImageGrabber;
 import com.lakemonsters2635.util.ImageGrabber.ImageMode;
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.ImageFeatureMode;
+import com.ni.vision.NIVision.ImageType;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -126,7 +127,7 @@ public class Robot extends IterativeRobot
 	//END SHOOTER VARIABLES
 	//CAMERA VARIABLES
 		AHRS navx;
-		BaseSensor<NIVision.PointDouble> angleToTargetGrabber;
+		SensorTargetAngleFromImage angleToTargetGrabber;
 		SensorUnwrapper angleUnwrapper;
 		ImageGrabber camera;
 		PIDController cameraXPID;
@@ -229,15 +230,17 @@ public class Robot extends IterativeRobot
 	public void flywheelConfigEncoder()
 	{
 		flywheelMode = FunctionalityMode.Encoder;
-		FIRE_SPEED = -50000.0; //Competition: -50000.0, Practice: 50000.0
-		FEED_SPEED = -FIRE_SPEED / 2;
+		FIRE_SPEED = -55000.0; //Competition: -50000.0, Practice: 50000.0
+		FEED_SPEED = -FIRE_SPEED / 1.5;
 
     	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+    	rightFlywheelMotor.enableBrakeMode(true);
     	//rightFlywheelMotor.reverseSensor(true);
 	
     	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
+    	leftFlywheelMotor.enableBrakeMode(true);
     	leftFlywheelMotor.reverseSensor(true);
 
 	}
@@ -274,8 +277,8 @@ public class Robot extends IterativeRobot
 	public void shooterAssemblyConfigEncoder(boolean rezeroEncoders)
 	{  		
     		flywheelConfigEncoder();
-    		//elevatorConfigEncoder(rezeroEncoders);
     		elevatorConfigVbus();
+    		//elevatorConfigEncoder(rezeroEncoders);
     		tiltConfigEncoder(rezeroEncoders);
 	}
 	
@@ -328,13 +331,18 @@ public class Robot extends IterativeRobot
 	    		
 	      		int session = NIVision.IMAQdxOpenCamera("cam0",
 	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+	      		NIVision.Image testImage = NIVision.imaqCreateImage(ImageType.IMAGE_RGB, 0);
 	      		camera = new ImageGrabber(session, true, true, ImageMode.COLOR_DETECT, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE);
+				NIVision.IMAQdxGrab(session, testImage, 1);
 	      		
 	      		
 	      		//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
 	      		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
 	      	
-	      		cameraExists = true;
+	        	
+	        	SmartDashboard.putNumber("X Resolution", NIVision.imaqGetImageSize(testImage).width);
+	        	SmartDashboard.putNumber("Y Resolution", NIVision.imaqGetImageSize(testImage).height);
+
 	      	}
 	      	catch(Exception ex)
 	      	{
@@ -360,7 +368,6 @@ public class Robot extends IterativeRobot
 	public void cameraInit()
 	{
     	navx = new AHRS(SerialPort.Port.kMXP);
-    	
     	CameraInitChecker initThread = new CameraInitChecker();
     	initThread.start();
     	//TODO: The navx is mounted vertically rather than horizontally, so this may not get the angle correctly
@@ -797,8 +804,9 @@ public class Robot extends IterativeRobot
     	 		if(!aimed)
     	 		{
 	    	 		NIVision.PointDouble angleToTarget = angleToTargetGrabber.sense(camera.getImage());
+	    	 		angleToTargetYSetpoint = tiltEncoder.getDistance() + (angleToTarget.y - 250) * 1.149; //TODO 0.906 and 230 should be constants
 	    	 		SmartDashboard.putNumber("Angle to target y", angleToTarget.y);
-	    	 		angleToTargetYSetpoint = tiltEncoder.getDistance() + (-angleToTarget.y / (CAMERA_VIEW_ANGLE * (CAMERA_RESOLUTION_Y/CAMERA_RESOLUTION_X)) * TILT_MAX);
+	    	 		
 	    	 		SmartDashboard.putNumber("Y setpoint", angleToTargetYSetpoint);
 	    	 		aimed = true;
     	 		}
@@ -899,9 +907,10 @@ public class Robot extends IterativeRobot
 	    	SmartDashboard.putNumber(SHOOTER_SPEED_KEY, (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2);
 	    
     	//END DEBUG
-	    	boolean currentCameraMode = SmartDashboard.getBoolean(CAMERA_MODE_KEY);
-	    	if(currentCameraMode != previousCameraMode)
+	    	if(SmartDashboard.getBoolean("Push", false))
 	    	{
+		    	boolean currentCameraMode = SmartDashboard.getBoolean(CAMERA_MODE_KEY);
+		    	
 	    		if(currentCameraMode)
 	    		{
 	    			camera.setMode(ImageMode.COLOR_DETECT);
@@ -910,11 +919,23 @@ public class Robot extends IterativeRobot
 	    		{
 	    			camera.setMode(ImageMode.NORMAL);
 	    		}
-	    	}
-	    	previousCameraMode = currentCameraMode;
 	    	
-	    		
-	    	
+		    	previousCameraMode = currentCameraMode;
+		    	TARGET_HUE_RANGE.maxValue =(int) SmartDashboard.getNumber(HUE_MAX_KEY);
+		    	TARGET_HUE_RANGE.minValue = (int) SmartDashboard.getNumber(HUE_MIN_KEY);
+		    	TARGET_SATURATION_RANGE.maxValue = (int) SmartDashboard.getNumber(SAT_MAX_KEY);
+		    	TARGET_SATURATION_RANGE.minValue = (int) SmartDashboard.getNumber(SAT_MIN_KEY);
+		    	TARGET_VALUE_RANGE.maxValue = (int) SmartDashboard.getNumber(VAL_MAX_KEY);
+		    	TARGET_VALUE_RANGE.minValue = (int) SmartDashboard.getNumber(VAL_MIN_KEY);
+		    		
+		    	camera.setHueRange(TARGET_HUE_RANGE);
+		    	camera.setSatRange(TARGET_SATURATION_RANGE);
+		    	camera.setValRange(TARGET_VALUE_RANGE);
+		    	
+		    	angleToTargetGrabber.HUE_RANGE = TARGET_HUE_RANGE;
+		    	angleToTargetGrabber.SAT_RANGE = TARGET_SATURATION_RANGE;
+		    	angleToTargetGrabber.VAL_RANGE = TARGET_VALUE_RANGE;
+	    	}	
     		if(rightJoystick.getRawButton(VOLTAGE_MODE_BUTTON))
     		{
     			shooterAssemblyConfigVbus();

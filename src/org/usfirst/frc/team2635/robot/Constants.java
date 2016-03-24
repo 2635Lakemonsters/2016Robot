@@ -49,6 +49,13 @@ public final class Constants
 		
 		static String CAMERA_MODE_KEY = "CameraMode";
 		
+		static String HUE_MAX_KEY = "HueMax";
+		static String HUE_MIN_KEY = "HueMin";
+		static String VAL_MAX_KEY = "ValMax";
+		static String VAL_MIN_KEY = "ValMin";
+		static String SAT_MIN_KEY = "SatMin";
+		static String SAT_MAX_KEY = "SatMax";
+		
 	    static  double CAMERA_X_P_DEFAULT = 0.02;
 	    static  double CAMERA_X_I_DEFAULT = 0.0006;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
@@ -64,6 +71,7 @@ public final class Constants
 		static  NIVision.Range TARGET_HUE_RANGE = new NIVision.Range(0, 130);
 		static  NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
 		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
+		
 		static  double PARTICLE_AREA_MINIMUM = 0.5;
 		
 	}
@@ -91,8 +99,8 @@ public final class Constants
 		static  String SHOOTER_KEY_I = "Shooter I";
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
-		static double SHOOTER_P_DEFAULT = 0.1;
-		static double SHOOTER_I_DEFAULT = 0.00015;
+		static double SHOOTER_P_DEFAULT = 0.01;
+		static double SHOOTER_I_DEFAULT = 0.0001;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
 		static String SHOOTER_SPEED_KEY = "ShooterSpeed";
