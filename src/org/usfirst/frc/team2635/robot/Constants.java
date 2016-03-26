@@ -64,8 +64,8 @@ public final class Constants
 		static  double CAMERA_Y_I_DEFAULT = 0.001;
 		static  double CAMERA_Y_D_DEFAULT = 0.0;
 		
-		static  double CAMERA_RESOLUTION_X = 680.0;
-		static  double CAMERA_RESOLUTION_Y = 460.0;
+		static  double CAMERA_RESOLUTION_X = 640.0;
+		static  double CAMERA_RESOLUTION_Y = 360.0;
 		static  double CAMERA_VIEW_ANGLE = 64.0;
 		static  double TARGET_ASPECT_RATIO = 14.0/20.0;
 		static  NIVision.Range TARGET_HUE_RANGE = new NIVision.Range(0, 130);
@@ -73,6 +73,10 @@ public final class Constants
 		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
 		
 		static  double PARTICLE_AREA_MINIMUM = 0.5;
+		static NIVision.PointDouble cameraSetpoints;
+		
+		static int TILT_PIXEL_SETPOINT = 250;
+		static double PIXEL_TO_TILT = 1.149;
 		
 	}
 	public static class Shooter
@@ -100,7 +104,8 @@ public final class Constants
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
 		static double SHOOTER_P_DEFAULT = 0.01;
-		static double SHOOTER_I_DEFAULT = 0.0001;
+		static double SHOOTER_I_DEFAULT = 0.0001
+				;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
 		static String SHOOTER_SPEED_KEY = "ShooterSpeed";
@@ -158,7 +163,7 @@ public final class Constants
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR = 500.0;
+		static double SHOOTER_ERROR = 6000.0;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
@@ -198,7 +203,26 @@ public final class Constants
 	}
 	public static class Autonomous
 	{
-		static String AUTO_KEY ="Auto enabled";
-		static double FORWARD_DISTANCE;
+		/**
+		 * These values should correspond with the values given by the labview smartdashboard.
+		 * @author LakeM
+		 *
+		 */
+		public enum AutoMode
+		{
+			NO_AUTO(0),
+			SIMPLE_AUTO(1),
+			SHOOT_AUTO(2);
+			
+			public int value;
+			AutoMode(int number)
+			{
+				this.value = number;
+			}
+		}
+		static String AUTO_KEY ="AutoMode";
+		static double FORWARD_DISTANCE = 0.0; //TODO: Figure out what this is
+		static double ROTATION_DELTA = 60;
+		static double ADJUSTMENT_DISTANCE = 0.0; //TODO Figure out what this is
 	}
 }

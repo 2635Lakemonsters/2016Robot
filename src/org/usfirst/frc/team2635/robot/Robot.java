@@ -1,45 +1,29 @@
 
 package org.usfirst.frc.team2635.robot;
 
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeed;
-import org.usfirst.frc.team2635.modules.ActuatorLauncherFeedInvertRight;
 import org.usfirst.frc.team2635.modules.ActuatorTwoMotor;
 import org.usfirst.frc.team2635.modules.ActuatorTwoMotorInverse;
 import org.usfirst.frc.team2635.modules.DriveThreeMotor;
 import org.usfirst.frc.team2635.modules.DriveThreeMotorTankDrive;
-import org.usfirst.frc.team2635.modules.Flywheel;
 import org.usfirst.frc.team2635.modules.PIDOutputThreeMotorRotate;
-import org.usfirst.frc.team2635.modules.SensorCANTalonPIDError;
-import org.usfirst.frc.team2635.modules.SensorThreeAND;
 import org.usfirst.frc.team2635.modules.SensorNavxAngle;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.lakemonsters2635.actuator.interfaces.BaseActuator;
-import com.lakemonsters2635.actuator.modules.ActuatorClosedLoop;
 import com.lakemonsters2635.actuator.modules.ActuatorSimple;
-import com.lakemonsters2635.sensor.interfaces.BaseSensor;
-import com.lakemonsters2635.sensor.modules.SensorHitTest;
 import com.lakemonsters2635.sensor.modules.SensorOneShot;
-import com.lakemonsters2635.sensor.modules.SensorRawButton;
 import com.lakemonsters2635.sensor.modules.SensorTargetAngleFromImage;
 import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
 import com.lakemonsters2635.util.ImageGrabber;
 import com.lakemonsters2635.util.ImageGrabber.ImageMode;
 import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.ImageFeatureMode;
-import com.ni.vision.NIVision.ImageType;
-
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
@@ -51,7 +35,6 @@ import static org.usfirst.frc.team2635.robot.Constants.Camera.*;
 import static org.usfirst.frc.team2635.robot.Constants.Climber.*;
 import static org.usfirst.frc.team2635.robot.Constants.Shooter.*;
 
-import java.net.NetworkInterface;
 import java.util.TimerTask;
 
 import static org.usfirst.frc.team2635.robot.Constants.Autonomous.*;
@@ -71,7 +54,7 @@ public class Robot extends IterativeRobot
 	{
 		Encoder, //More position
 		VBus, //More vbus
-	
+		Autonomous
 	}
 	FunctionalityMode flywheelMode;
 	FunctionalityMode elevatorMode;
@@ -145,10 +128,12 @@ public class Robot extends IterativeRobot
 	{
 		//TODO: Middle motor is driver
 		//TODO: Uses RobotDrive instead of threeMotor
+		driveMode = FunctionalityMode.Encoder;
     	rearRightMotor.changeControlMode(TalonControlMode.Follower);
     	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
     	
     	midRightMotor.changeControlMode(TalonControlMode.Speed);
+    	midRightMotor.reverseSensor(true);
     	midRightMotor.set(FRONT_RIGHT_CHANNEL);
     	
     	frontRightMotor.changeControlMode(TalonControlMode.Follower);
@@ -158,6 +143,29 @@ public class Robot extends IterativeRobot
     	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
     	
     	midLeftMotor.changeControlMode(TalonControlMode.Speed);
+    	midLeftMotor.reverseSensor(true);
+    	midLeftMotor.set(FRONT_LEFT_CHANNEL);
+    	
+    	frontLeftMotor.changeControlMode(TalonControlMode.Follower);
+    	frontLeftMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+
+	}
+	public void driveConfigPosition()
+	{
+		driveMode = FunctionalityMode.Autonomous;
+    	rearRightMotor.changeControlMode(TalonControlMode.Follower);
+    	rearRightMotor.set(FRONT_RIGHT_CHANNEL);
+    	
+    	midRightMotor.changeControlMode(TalonControlMode.Position);
+    	midRightMotor.set(FRONT_RIGHT_CHANNEL);
+    	
+    	frontRightMotor.changeControlMode(TalonControlMode.Follower);
+    	frontRightMotor.setPID(DRIVE_P_DEFAULT, DRIVE_I_DEFAULT, DRIVE_D_DEFAULT);
+    	
+    	rearLeftMotor.changeControlMode(TalonControlMode.Follower);
+    	rearLeftMotor.set(FRONT_LEFT_CHANNEL);
+    	
+    	midLeftMotor.changeControlMode(TalonControlMode.Position);
     	midLeftMotor.set(FRONT_LEFT_CHANNEL);
     	
     	frontLeftMotor.changeControlMode(TalonControlMode.Follower);
@@ -185,21 +193,27 @@ public class Robot extends IterativeRobot
     	rearRightMotor = new CANTalon(REAR_RIGHT_CHANNEL);	    	
     	midRightMotor = new CANTalon(MID_RIGHT_CHANNEL);
     	frontRightMotor = new CANTalon(FRONT_RIGHT_CHANNEL);
+    	
     	rearLeftMotor = new CANTalon(REAR_LEFT_CHANNEL);
     	midLeftMotor = new CANTalon(MID_LEFT_CHANNEL);
 		frontLeftMotor = new CANTalon(FRONT_LEFT_CHANNEL);	
+		
 		robotDrive = new DriveThreeMotorTankDrive(rearRightMotor, midRightMotor, frontRightMotor, rearLeftMotor, midLeftMotor, frontLeftMotor);
+		
 		rightJoystick = new Joystick(JOYSTICK_RIGHT_CHANNEL);
     	leftJoystick = new Joystick(JOYSTICK_LEFT_CHANNEL);
 		
+    	//Encoder functionality hasn't been set up for drive, so only have it be set to vbus.
     	driveConfigVbus();
 
 	}
 	public void flywheelConfigVbus()
 	{
 		flywheelMode = FunctionalityMode.VBus;
+		
 		FIRE_SPEED = 1.0;
 		FEED_SPEED = -FIRE_SPEED/ 2.5;
+		
 	  	feedMotor.changeControlMode(TalonControlMode.PercentVbus);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
     	leftFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
@@ -207,10 +221,12 @@ public class Robot extends IterativeRobot
 	public void elevatorConfigVbus()
 	{
 		elevatorMode = FunctionalityMode.VBus;
+		
+		//Elevator is - going up, ONLY ON PRACTICE ROBOT
 		ELEVATE_UP_SPEED = -1.0;
 		ELEVATE_DOWN_SPEED = 0.7;
-    	rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
     	
+		rightElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
     	leftElevatorMotor.changeControlMode(TalonControlMode.PercentVbus);
 	}
 	public void tiltConfigVbus()
@@ -220,8 +236,6 @@ public class Robot extends IterativeRobot
 	}
 	public void shooterAssemblyConfigVbus()
 	{
-
-		
     	flywheelConfigVbus();
     	elevatorConfigVbus();
     	tiltConfigVbus();
@@ -233,14 +247,15 @@ public class Robot extends IterativeRobot
 		FIRE_SPEED = -55000.0; //Competition: -50000.0, Practice: 50000.0
 		FEED_SPEED = -FIRE_SPEED / 1.5;
 
-    	rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
+		//On practice bot, leftFlywheelMotor has its sensor reversed. On competition, both are reversed.
+		rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
-    	rightFlywheelMotor.enableBrakeMode(true);
+    	rightFlywheelMotor.enableBrakeMode(false);
     	//rightFlywheelMotor.reverseSensor(true);
 	
     	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
-    	leftFlywheelMotor.enableBrakeMode(true);
+    	leftFlywheelMotor.enableBrakeMode(false);
     	leftFlywheelMotor.reverseSensor(true);
 
 	}
@@ -250,6 +265,9 @@ public class Robot extends IterativeRobot
 		//1 encoder tick per 20ms
 		ELEVATE_DOWN_SPEED = -1000.0;
 		ELEVATE_UP_SPEED = 1000.0;
+		
+		//Output is inversed for elevator motors ONLY ON PRACTICE ROBOT
+		
     	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
     	rightElevatorMotor.reverseSensor(true);
     	rightElevatorMotor.reverseOutput(true);
@@ -277,8 +295,9 @@ public class Robot extends IterativeRobot
 	public void shooterAssemblyConfigEncoder(boolean rezeroEncoders)
 	{  		
     		flywheelConfigEncoder();
-    		elevatorConfigVbus();
-    		//elevatorConfigEncoder(rezeroEncoders);
+    		
+    		
+    		elevatorConfigEncoder(rezeroEncoders);
     		tiltConfigEncoder(rezeroEncoders);
 	}
 	
@@ -319,6 +338,7 @@ public class Robot extends IterativeRobot
 		climberMotor = new CANTalon(CLIMBER_CHANNEL);
 		climber = new ActuatorSimple(climberMotor);    	
 	}
+	//This should be run periodically
 	public class TryCameraInit extends TimerTask
 	{
 
@@ -328,26 +348,23 @@ public class Robot extends IterativeRobot
 			try
 	      	{
 	      		//use cam0 to change properties of the camera such as FPS, exposure, etc.
-	    		
+	    		USBCamera cam0 = new USBCamera();
+	    		cam0.setExposureManual(50);
+	    		cam0.closeCamera();
 	      		int session = NIVision.IMAQdxOpenCamera("cam0",
 	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-	      		NIVision.Image testImage = NIVision.imaqCreateImage(ImageType.IMAGE_RGB, 0);
-	      		camera = new ImageGrabber(session, true, true, ImageMode.COLOR_DETECT, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE);
-				NIVision.IMAQdxGrab(session, testImage, 1);
-	      		
-	      		
-	      		//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
+	      		camera = new ImageGrabber(session, true, true, ImageMode.NORMAL, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE);
+	//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
 	      		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
 	      	
 	        	
-	        	SmartDashboard.putNumber("X Resolution", NIVision.imaqGetImageSize(testImage).width);
-	        	SmartDashboard.putNumber("Y Resolution", NIVision.imaqGetImageSize(testImage).height);
-
+	      		cameraExists = true;
 	      	}
 	      	catch(Exception ex)
 	      	{
 	      		cameraExists = false;
 	      		System.err.println("Camera does not exist!");
+	      		ex.printStackTrace();
 	      	}
 		}
 	}
@@ -420,7 +437,7 @@ public class Robot extends IterativeRobot
 	    smartDashboardInit();
     	driveInit(driveMode);	
 	    shooterInit(FunctionalityMode.Encoder);
-	    //climberInit();
+	    climberInit();
 	    cameraInit();
     }
     
@@ -474,7 +491,8 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    
+    	midRightMotor.setPID(SmartDashboard.getNumber(DRIVE_KEY_P), SmartDashboard.getNumber(DRIVE_KEY_I), SmartDashboard.getNumber(DRIVE_KEY_D));
+    	leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
 
 	    
     }
@@ -482,6 +500,7 @@ public class Robot extends IterativeRobot
      * 
      * @return Angle for tilter
      */
+    @Deprecated
     public double cameraTeleop(FunctionalityMode teleopMode)
     {
     	if(teleopMode == FunctionalityMode.Encoder)
@@ -619,7 +638,6 @@ public class Robot extends IterativeRobot
     public void checkFlywheelFault()
     {
     	//The flywheel takes a moment to rev up, so give it a second before declaring a fault
-    	SmartDashboard.putBoolean("Timer set", timerSet);
 		if((Math.abs(rightFlywheelMotor.getSpeed()) < 0.5 || Math.abs(leftFlywheelMotor.getSpeed()) < 0.5) && timerSet)
 		{
 			if(fireTimeout.hasPeriodPassed(1.0))
@@ -646,7 +664,7 @@ public class Robot extends IterativeRobot
 			fireTimeout.stop();
 		}
     }
-    boolean set = false;
+    boolean feedMotorSet = false;
     public void flywheelTeleop(FunctionalityMode mode)
     {
     	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
@@ -662,19 +680,13 @@ public class Robot extends IterativeRobot
     			checkFlywheelFault();
     			
     			double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
-    			SmartDashboard.putNumber("Average error", averageError);
-    			SmartDashboard.putNumber("Right error", rightFlywheelMotor.getError());
-    			SmartDashboard.putNumber("Left error", leftFlywheelMotor.getError());
-    			
     			double averageSpeed = (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2.0;
-    			boolean ready = averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
-    			SmartDashboard.putNumber("Average speed", averageSpeed);
-    			SmartDashboard.putBoolean("set", set);
-    			SmartDashboard.putBoolean("ready", ready);
-    			if(ready || set)
+    			boolean readyToFire = averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
+
+    			if(readyToFire || feedMotorSet)
     			{
     				feedMotor.set(1.0);
-    				set = true;
+    				feedMotorSet = true;
     			}
     			else
     			{
@@ -700,7 +712,7 @@ public class Robot extends IterativeRobot
     	{	
     		rightFlywheelMotor.ClearIaccum();
     		leftFlywheelMotor.ClearIaccum();
-    		set = false;
+    		feedMotorSet = false;
     		
     		flywheelMethod.actuate(0.0);
     		feedMotor.set(0.0);
@@ -723,7 +735,8 @@ public class Robot extends IterativeRobot
     	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
     	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
     	boolean start = leftJoystick.getRawButton(STARTING_BUTTON);
-
+    	boolean climbing = leftJoystick.getRawButton(CLIMB_UP_BUTTON) || leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
+    	
     	if(mode == FunctionalityMode.Encoder)
     	{
 			if(elevatorPosition > 0)
@@ -746,7 +759,7 @@ public class Robot extends IterativeRobot
 			{
 				elevatorPosition += ELEVATE_DOWN_SPEED;
 			}
-			else if(start)
+			else if(start || climbing)
 			{
 				elevatorPosition = ELEVATION_START;
 			}
@@ -799,15 +812,11 @@ public class Robot extends IterativeRobot
     		//TODO: Camera aiming
     		boolean aimCamera = rightJoystick.getRawButton(AIM_CAMERA_BUTTON);
     	 	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
-    	 	if(aimCamera)
+    	 	if(aimCamera && cameraSetpoints != null)
     	 	{
     	 		if(!aimed)
     	 		{
-	    	 		NIVision.PointDouble angleToTarget = angleToTargetGrabber.sense(camera.getImage());
-	    	 		angleToTargetYSetpoint = tiltEncoder.getDistance() + (angleToTarget.y - 250) * 1.149; //TODO 0.906 and 230 should be constants
-	    	 		SmartDashboard.putNumber("Angle to target y", angleToTarget.y);
-	    	 		
-	    	 		SmartDashboard.putNumber("Y setpoint", angleToTargetYSetpoint);
+	    	 		angleToTargetYSetpoint = tiltEncoder.getDistance() + (cameraSetpoints.y - TILT_PIXEL_SETPOINT) * PIXEL_TO_TILT;     	 		
 	    	 		aimed = true;
     	 		}
     	 		else
@@ -818,13 +827,13 @@ public class Robot extends IterativeRobot
     	 	else
     	 	{
     	 		aimed = false;
-	    	 	if(true)//rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS || leftElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
+	    	 	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS || leftElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
 	    	 	{
 	    	 		tiltPID.setSetpoint(tiltAngle);
 	    	 	}
 	    	 	else
 	    	 	{
-	    	 		tiltPID.setSetpoint(-100.0);
+	    	 		tiltPID.setSetpoint(0.0);
 	    	 	}
     	 	}
     	}
@@ -859,24 +868,45 @@ public class Robot extends IterativeRobot
     	tiltTeleop(tiltMode);
 		
     }
+    boolean prevValue = false;
     public void driveTeleop(FunctionalityMode mode)
     {
     	double RY = rightJoystick.getRawAxis(RIGHT_Y_AXIS);
     	double LY = -leftJoystick.getRawAxis(LEFT_Y_AXIS);
+    	boolean aimCamera = rightJoystick.getRawButton(AIM_CAMERA_BUTTON);
+    	
+    	if(aimCamera && cameraSetpoints != null)
+    	{
+    		if(!cameraXPID.isEnabled())
+    		{
+    			double setPoint =  angleUnwrapper.sense(null) + cameraSetpoints.x; 
+				SmartDashboard.putNumber("X setpoint", setPoint);
+				cameraXPID.enable();
+				cameraXPID.setSetpoint(setPoint);
+    		}
+    	}
+    	else
+    	{
+    		if(cameraXPID.isEnabled())
+    		{
+    			cameraXPID.disable();
+    		}
+    	}
+    
     	robotDrive.drive(LY, RY);
     }
     public void climberTeleop()
     {	
 		boolean climbUp = leftJoystick.getRawButton(CLIMB_UP_BUTTON);
 		boolean climbDown = leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
-
+		double speed = ((-leftJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
 		if(climbUp)
 		{
-			climber.actuate(1.0);
+			climber.actuate(speed);
 		}
 		else if(climbDown)
 		{
-			climber.actuate(-1.0);
+			climber.actuate(-speed);
 		}
 		else
 		{
@@ -895,19 +925,24 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putNumber("Elevator encoder left", leftElevatorMotor.getPosition());
     		SmartDashboard.putNumber("Right shooter speed", rightFlywheelMotor.getSpeed());
     		SmartDashboard.putNumber("Left shooter speed", leftFlywheelMotor.getSpeed());    		
-    		SmartDashboard.putNumber("Tilt setpoint", tiltPID.getSetpoint());
     		
-    		SmartDashboard.putNumber("Right Elevator Current", rightElevatorMotor.getOutputCurrent());
-    		SmartDashboard.putNumber("Left Elevator Current", leftElevatorMotor.getOutputCurrent());
+    		SmartDashboard.putNumber("Right drive speed", midRightMotor.getSpeed());
+    		SmartDashboard.putNumber("Left drive speed", midLeftMotor.getSpeed());
+    		
     		SmartDashboard.putBoolean("Left limit", leftElevatorLimit.get());
     		SmartDashboard.putBoolean("Right limit", rightElevatorLimit.get());
     		SmartDashboard.putBoolean("Tilt limit", tiltLimit.get());
+
+    		SmartDashboard.putNumber("Angle", angleUnwrapper.sense(null));
+    		SmartDashboard.putNumber("Raw Angle", navx.getAngle());
     		SmartDashboard.putNumber(ELEVATION_KEY, (rightElevatorMotor.getPosition() + leftElevatorMotor.getPosition()) / 2);
 	    	SmartDashboard.putNumber(TILT_KEY, tiltEncoder.getDistance());
 	    	SmartDashboard.putNumber(SHOOTER_SPEED_KEY, (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2);
 	    
     	//END DEBUG
-	    	if(SmartDashboard.getBoolean("Push", false))
+	    	
+	    	//Prevent lag issues (multithreading?)
+	    	if(SmartDashboard.getBoolean("Push"))
 	    	{
 		    	boolean currentCameraMode = SmartDashboard.getBoolean(CAMERA_MODE_KEY);
 		    	
@@ -948,6 +983,17 @@ public class Robot extends IterativeRobot
     			shooterAssemblyConfigEncoder(true);
     			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
     		}
+    		
+    		//Get a common set of setpoints for drive and tilt
+    		if(rightJoystick.getRawButton(AIM_CAMERA_BUTTON))
+    		{
+    			cameraSetpoints = angleToTargetGrabber.sense(camera.getImage());
+    		}
+    		else
+    		{
+    			//Functions should null check to make sure the cameraSetpoints are calculated before attempting to caculate setpoints
+    			cameraSetpoints = null;
+    		}
     		//If aiming isn't enabled, the tilt angle will be the rightJoystick's Z axis
     		//As a result, cameraTeleop must always be run before shooterTeleop
     		
@@ -956,7 +1002,7 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putBoolean(ELEVATOR_FAULT_KEY, elevatorFault);
     		SmartDashboard.putBoolean(TILT_FAULT_KEY, tiltFault);
     		driveTeleop(driveMode);
-    		//climberTeleop(runMode);
+    		climberTeleop();
 
     }
     

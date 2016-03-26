@@ -13,7 +13,8 @@ public class PIDOutputThreeMotorRotate implements PIDOutput
 	@Override
 	public void pidWrite(double output)
 	{
-		robotDrive.drive(output, -output);
+		//Output doesn't need to be inverted because the motor itself is inverted
+		robotDrive.drive(output, output);
 		
 	}
 
