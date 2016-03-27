@@ -35,7 +35,8 @@ public final class Constants
 		public static double DRIVE_D_DEFAULT = 0.0;
 		public static int VOLTAGE_MODE_BUTTON = 8;
 		public static int SPEED_MODE_BUTTON = 9;
-		public double speedModeScaler = 1000.0;
+		public static double speedModeScaler = 1000.0;
+		
 	}
 	public static class Camera
 	{
@@ -163,7 +164,7 @@ public final class Constants
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR = 6000.0;
+		static double SHOOTER_ERROR = 1000.0;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
@@ -175,6 +176,8 @@ public final class Constants
 		static  int ELEVATE_UP_BUTTON = 11;
 		static  int ELEVATE_DOWN_BUTTON = 10;
 		static int STARTING_BUTTON = 6;
+		
+		static int VBUS_FEED_BUTTON = 4;
 	}
 	public static class Climber
 	{
@@ -221,7 +224,8 @@ public final class Constants
 			}
 		}
 		static String AUTO_KEY ="AutoMode";
-		static double FORWARD_DISTANCE = 0.0; //TODO: Figure out what this is
+		public static double countPerInch = 216.67;
+		static double FORWARD_DISTANCE = 217.4 * countPerInch; //TODO: Figure out what this is
 		static double ROTATION_DELTA = 60;
 		static double ADJUSTMENT_DISTANCE = 0.0; //TODO Figure out what this is
 	}
