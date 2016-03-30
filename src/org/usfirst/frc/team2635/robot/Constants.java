@@ -73,7 +73,7 @@ public final class Constants
 		static  NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
 		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
 		
-		static  double PARTICLE_AREA_MINIMUM = 0.5;
+		static  double PARTICLE_AREA_MINIMUM = 0.3;
 		static NIVision.PointDouble cameraSetpoints;
 		
 		static int TILT_PIXEL_SETPOINT = 250;
@@ -104,8 +104,8 @@ public final class Constants
 		static  String SHOOTER_KEY_I = "Shooter I";
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
-		static double SHOOTER_P_DEFAULT = 0.01;
-		static double SHOOTER_I_DEFAULT = 0.0001
+		static double SHOOTER_P_DEFAULT = 0.3;
+		static double SHOOTER_I_DEFAULT = 0.00001
 				;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
@@ -164,7 +164,7 @@ public final class Constants
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR = 1000.0;
+		static double SHOOTER_ERROR = 1200.0;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;

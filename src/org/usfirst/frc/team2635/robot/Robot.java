@@ -15,7 +15,6 @@ import com.lakemonsters2635.actuator.interfaces.BaseDrive;
 import com.lakemonsters2635.actuator.modules.ActuatorSimple;
 import com.lakemonsters2635.actuator.modules.DriveTank;
 import com.lakemonsters2635.sensor.modules.SensorOneShot;
-import com.lakemonsters2635.sensor.modules.SensorTargetAngleFromImage;
 import com.lakemonsters2635.sensor.modules.SensorUnwrapper;
 import com.ni.vision.NIVision;
 import edu.wpi.first.wpilibj.CANTalon;
@@ -530,6 +529,12 @@ public class Robot extends IterativeRobot
 				
 				//Get the tilter looking at the target
 				tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 1.7, false);
+				calculateCameraSetpoints();
+				//If unsucsessful at getting setpoints, give up.
+				if(cameraSetpoints == null)
+				{
+					shootAutoState = ShootAutoState.STOP_FIRE;
+				}
 				if(shootAutoTimer.hasPeriodPassed(1.0))
 				{
 					//Aim
@@ -542,8 +547,11 @@ public class Robot extends IterativeRobot
 					flywheelTeleop(FunctionalityMode.Encoder, true, false);
 				}
 				//Give about 2 seconds to fire
-				if(shootAutoTimer.hasPeriodPassed(5.0))
+				if(shootAutoTimer.hasPeriodPassed(4.0))
 				{
+					flywheelTeleop(FunctionalityMode.Encoder, false, false);
+					tiltTeleop(FunctionalityMode.Encoder, 0, false);
+					rezeroTiltAndElevator();
 					shootAutoState = ShootAutoState.STOP_FIRE;
 				}
 			}
@@ -562,9 +570,6 @@ public class Robot extends IterativeRobot
 			}
 			break;
 		case STOP_FIRE:
-			flywheelTeleop(FunctionalityMode.Encoder, false, false);
-			tiltTeleop(FunctionalityMode.Encoder, 0, false);
-			rezeroTiltAndElevator();
 			break;
 		default:
 			break;
@@ -786,14 +791,12 @@ public class Robot extends IterativeRobot
     		{
     		
     			checkFlywheelFault();
-    			if(!rightFlywheelMotor.isEnabled())
-    			{
-    				rightFlywheelMotor.enable();
-    			}
-    			if(!leftFlywheelMotor.isEnabled())
-    			{
-    				leftFlywheelMotor.enable();
-    			}
+			
+				rightFlywheelMotor.enable();
+			
+			
+				leftFlywheelMotor.enable();
+			
     			double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
     			double averageSpeed = (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2.0;
     			boolean readyToFire = averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
@@ -827,14 +830,12 @@ public class Robot extends IterativeRobot
     		{
     			checkFlywheelFault();
     		}
-    		if(!rightFlywheelMotor.isEnabled())
-    		{
-    			rightFlywheelMotor.enable();
-    		}
-    		if(!leftFlywheelMotor.isEnabled())
-    		{
-    			leftFlywheelMotor.enable();
-    		}
+    		
+    		rightFlywheelMotor.enable();
+    		
+    		
+    		leftFlywheelMotor.enable();
+    		
     		flywheelMethod.actuate(FEED_SPEED);
     		feedMotor.set(-1.0);
     	}
@@ -845,14 +846,11 @@ public class Robot extends IterativeRobot
     		
     		feedMotorSet = false;
     		//Prevent oscillating around 0
-    		if(rightFlywheelMotor.isEnabled())
-    		{
-    			rightFlywheelMotor.disable();
-    		}
-    		if(leftFlywheelMotor.isEnabled())
-    		{
-    			leftFlywheelMotor.disable();
-    		}
+    		
+    		rightFlywheelMotor.disable();
+    		
+   			leftFlywheelMotor.disable();
+    		
     		flywheelMethod.actuate(0.0);
     		feedMotor.set(0.0);
     	}
@@ -1005,7 +1003,7 @@ public class Robot extends IterativeRobot
     	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
     	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
     	boolean start = leftJoystick.getRawButton(STARTING_BUTTON);
-
+    	SmartDashboard.putBoolean("Fire button", fire);
     	flywheelTeleop(flywheelMode, fire, loadFront);
     	elevatorTeleop(elevatorMode, elevateUp, elevateDown, aim, start);
     	tiltTeleop(tiltMode, tiltAngle, aimCamera);
@@ -1139,8 +1137,13 @@ public class Robot extends IterativeRobot
     		//Get a common set of setpoints for drive and tilt
     		if(rightJoystick.getRawButton(AIM_CAMERA_BUTTON))
     		{
-    			//An error will throw if the camera gets unplugged
-    			calculateCameraSetpoints();
+    			
+    			//Make sure to calculate setpoints once per button press, to avoid lagging the system.
+    			if(cameraSetpoints == null)
+    			{
+	    			//An error will throw if the camera gets unplugged
+	    			calculateCameraSetpoints();
+	    		}
     		}
     		else
     		{
