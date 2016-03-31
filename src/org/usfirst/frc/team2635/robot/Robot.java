@@ -258,14 +258,14 @@ public class Robot extends IterativeRobot
 		rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
     	rightFlywheelMotor.enableBrakeMode(true);
-    	//rightFlywheelMotor.reverseSensor(true);
-    	rightFlywheelMotor.reverseOutput(true);
+    	rightFlywheelMotor.reverseSensor(true);
+    	//rightFlywheelMotor.reverseOutput(true);
     	
     	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
     	leftFlywheelMotor.enableBrakeMode(true);
     	leftFlywheelMotor.reverseSensor(true);
-    	leftFlywheelMotor.reverseOutput(true);
+    	//leftFlywheelMotor.reverseOutput(true);
 
 	}
 	public void elevatorConfigEncoder(boolean zero)
@@ -279,12 +279,12 @@ public class Robot extends IterativeRobot
 		
     	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
     	rightElevatorMotor.reverseSensor(true);
-    	rightElevatorMotor.reverseOutput(true);
+    	//rightElevatorMotor.reverseOutput(true);
     	rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
     	
     	leftElevatorMotor.changeControlMode(TalonControlMode.Position);
     	leftElevatorMotor.reverseSensor(true);
-    	leftElevatorMotor.reverseOutput(true);
+    	//leftElevatorMotor.reverseOutput(true);
     	leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
     	if(zero)
     	{
@@ -461,36 +461,31 @@ public class Robot extends IterativeRobot
     
     Timer autoTimer = new Timer();
     double autoStartTime;
-    boolean doAuto = true;
-    @Override
+   @Override
     
 	public void autonomousInit() 
     {
     	midRightMotor.setPosition(0.0);
     	midLeftMotor.setPosition(0.0);
-    	doAuto  &= rezeroTilt();
-		Timer timer = new Timer();
-		timer.start();
-		double startTime = timer.get();
-		while(timer.get() - startTime < 0.3){}
-		doAuto &= rezeroElevator();
-		
+    	rezeroTiltAndElevator();
 		autoTimer.reset();
 		autoTimer.start();
 		autoStartTime = autoTimer.get();
+
 		switch((AutoMode.values()[(int)SmartDashboard.getNumber(AUTO_KEY)]))
     	{
 		case NO_AUTO:
 			break;
 		case SHOOT_AUTO:
 		case SIMPLE_AUTO:
-			robotDrive.drive(0.5, -0.5);
+			robotDrive.drive(0.7, -0.7);
 			break;
 		default:
 			break;
     	
     	}
-    }
+		
+	}
 
     /**
      * This function is called periodically during autonomous
@@ -504,7 +499,7 @@ public class Robot extends IterativeRobot
     public void simpleAuto()
     {
     	//Robot starts driving forward
-    	if(autoTimer.get() > 3.0 || !doAuto)
+    	if(autoTimer.get() > 3.0)
     	{
     		robotDrive.drive(0, 0);
     	}
@@ -514,8 +509,6 @@ public class Robot extends IterativeRobot
     Timer shootAutoTimer = new Timer();
     public void shootAuto()
     {
-    	SmartDashboard.putNumber("Right drive auto", midRightMotor.getPosition());
-    	SmartDashboard.putNumber("Left drive auto", midLeftMotor.getPosition());
     	SmartDashboard.putString("Shoot auto state", shootAutoState.toString());
     	switch(shootAutoState)
     	{
@@ -526,40 +519,48 @@ public class Robot extends IterativeRobot
 				//TODO pack the shooter subsystems into a class and the drive into a class so we don't have to do this gross function stuff.
 
 				elevateMethod.actuate(ELEVATION_MAX);
-				
+				elevatorState = true;
+				elevatorPosition = ELEVATION_MAX;
 				//Get the tilter looking at the target
-				tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 1.7, false);
+				if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS && leftElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
+				{
+					// Wait for elevator to clear chassis before attempting to tilt
+					tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 1.5, false);
+				}
 				calculateCameraSetpoints();
+				SmartDashboard.putString("State","Ahh");
 				//If unsucsessful at getting setpoints, give up.
 				if(cameraSetpoints == null)
 				{
 					shootAutoState = ShootAutoState.STOP_FIRE;
 				}
-				if(shootAutoTimer.hasPeriodPassed(1.0))
+				//Give about 2 seconds to aim
+				if(shootAutoTimer.hasPeriodPassed(2.0))
 				{
+					SmartDashboard.putString("State","Ahhhh");
+					flywheelTeleop(FunctionalityMode.Encoder, true, false);
+				}
+				//Thought this was done periodically, chances are its not for whatever reason. 
+				if(shootAutoTimer.hasPeriodPassed(0.5))
+				{
+					
+					SmartDashboard.putString("State","Ahhh");
 					//Aim
 					tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 2.0, true);
 					driveTeleop(FunctionalityMode.Encoder, true);
 				}
-				//Give about 2 seconds to aim
-				if(shootAutoTimer.hasPeriodPassed(3.0))
-				{
-					flywheelTeleop(FunctionalityMode.Encoder, true, false);
-				}
-				//Give about 2 seconds to fire
-				if(shootAutoTimer.hasPeriodPassed(4.0))
-				{
-					flywheelTeleop(FunctionalityMode.Encoder, false, false);
-					tiltTeleop(FunctionalityMode.Encoder, 0, false);
-					rezeroTiltAndElevator();
-					shootAutoState = ShootAutoState.STOP_FIRE;
-				}
+				
+				
 			}
 			
 			break;
 		case DRIVE_FORWARD:
-			//Robot begins in a moving state
-			if(Math.abs(midRightMotor.getPosition()) >= FORWARD_DISTANCE || Math.abs(midLeftMotor.getPosition()) >= FORWARD_DISTANCE)
+
+			double right = midRightMotor.getPosition();
+			double left = midLeftMotor.getPosition();
+	    	SmartDashboard.putNumber("Right drive auto", right);
+	    	SmartDashboard.putNumber("Left drive auto", left);
+	    	if(Math.abs(right) > FORWARD_DISTANCE || Math.abs(left) > FORWARD_DISTANCE)
 			{
 				robotDrive.drive(0, 0);
 				cameraXPID.enable();
@@ -567,7 +568,15 @@ public class Robot extends IterativeRobot
 				shootAutoTimer.reset();
 				shootAutoTimer.start();
 				shootAutoState = ShootAutoState.ANGLE_TO_TARGET;
+				return;
 			}
+	    	//Floor it once past lowbar
+	    	if(Math.abs(right) > DISTANCE_TO_LOWBAR || Math.abs(left) > DISTANCE_TO_LOWBAR)
+	    	{
+	    		robotDrive.drive(1.0, -1.0);
+	    	}
+			//Robot begins in a moving state
+			
 			break;
 		case STOP_FIRE:
 			break;
@@ -580,7 +589,7 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousPeriodic() 
     {
-    	//A bit weird
+    		       	//A bit weird
     	switch((AutoMode.values()[(int)SmartDashboard.getNumber(AUTO_KEY)]))
     	{
 		case NO_AUTO:
@@ -595,6 +604,7 @@ public class Robot extends IterativeRobot
 			break;
     	
     	}
+	
     	
     }
 
@@ -685,6 +695,9 @@ public class Robot extends IterativeRobot
 			{
 				//tilt will be in vbus
 				tiltMotor.set(0.0);
+				tiltEncoder.reset();
+				tiltConfigEncoder(true);
+				tiltPID.setSetpoint(-100.0); //Competition = -100, Practice = 100
 				return false;
 			}
 			boolean limitHit = !tiltLimit.get();
@@ -693,7 +706,7 @@ public class Robot extends IterativeRobot
 				tiltMotor.set(0.0);
 				tiltEncoder.reset();
 				tiltConfigEncoder(true);
-				tiltPID.setSetpoint(-100.0); //Competition = -100, Practice = 100
+				tiltPID.setSetpoint(100.0); //Competition = -100, Practice = 100
 				return true;
 			}
 		}
@@ -707,35 +720,36 @@ public class Robot extends IterativeRobot
 		timer.start();
 		rightElevatorMotor.set(REZERO_SPEED);
 		leftElevatorMotor.set(REZERO_SPEED);
-
+		boolean successful = true;
 		while(true)
 		{
 			//TODO: add in time limit for autonomous
 			//If the limit switches break, the robot could enter a broken state, so be able to exit rezeroing.
 			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON)|| timer.hasPeriodPassed(2.0))
 			{
-				rightElevatorMotor.set(0.0);
-				leftElevatorMotor.set(0.0);
-				//Robot is in Vbus mode now.
-				return false;
+				successful = false;
+				
+				break;
 			}
 			boolean leftLimitHit = !leftElevatorLimit.get();
 			boolean rightLimitHit = !rightElevatorLimit.get();
 			if(rightLimitHit || leftLimitHit)
 			{
-				rightElevatorMotor.set(0.0);
-				rightElevatorMotor.setPosition(0.0);
-				
-				leftElevatorMotor.set(0.0);
-				leftElevatorMotor.setPosition(0.0);
-				elevatorPosition = 0.0;
-				elevatorState = false;
+				successful = true;
 				break;
 			}
 			
 		}
+		rightElevatorMotor.set(0.0);
+		rightElevatorMotor.setPosition(0.0);
+		
+		leftElevatorMotor.set(0.0);
+		leftElevatorMotor.setPosition(0.0);
+		elevatorPosition = 0.0;
+		elevatorState = false;
+	
 		elevatorConfigEncoder(true);
-		return true;
+		return successful;
 	}
     public void rezeroTiltAndElevator()
     {
@@ -785,17 +799,17 @@ public class Robot extends IterativeRobot
 		
     	if(fire)
     	{
-    		
+			rightFlywheelMotor.enable();
+			
+			
+			leftFlywheelMotor.enable();
+
     		flywheelMethod.actuate(FIRE_SPEED);
     		if(mode == FunctionalityMode.Encoder)
     		{
     		
     			checkFlywheelFault();
 			
-				rightFlywheelMotor.enable();
-			
-			
-				leftFlywheelMotor.enable();
 			
     			double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
     			double averageSpeed = (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2.0;
@@ -958,7 +972,7 @@ public class Robot extends IterativeRobot
     	 	else
     	 	{
     	 		aimed = false;
-	    	 	if(rightElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS || leftElevatorMotor.getPosition() > ELEVATION_ABOVE_CHASSIS)
+	    	 	if(Math.abs(rightElevatorMotor.getPosition()) > ELEVATION_ABOVE_CHASSIS || Math.abs(leftElevatorMotor.getPosition()) > ELEVATION_ABOVE_CHASSIS)
 	    	 	{
 	    	 		tiltPID.setSetpoint(tiltAngle);
 	    	 	}

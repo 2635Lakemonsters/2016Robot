@@ -57,7 +57,7 @@ public final class Constants
 		static String SAT_MIN_KEY = "SatMin";
 		static String SAT_MAX_KEY = "SatMax";
 		
-	    static  double CAMERA_X_P_DEFAULT = 0.02;
+	    static  double CAMERA_X_P_DEFAULT = 0.01;
 	    static  double CAMERA_X_I_DEFAULT = 0.0006;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
 
@@ -157,7 +157,7 @@ public final class Constants
 		static boolean elevatorState = false;
 		static double debugTiltPosition = 0.0;
 		
-		static double TILT_MAX = -750.0; 
+		static double TILT_MAX = 750.0; 
 		static double TILT_RESTING = 0.0;
 		
 		static double ELEVATION_MAX = 45000.0; 
@@ -225,7 +225,8 @@ public final class Constants
 		}
 		static String AUTO_KEY ="AutoMode";
 		public static double countPerInch = 216.67;
-		static double FORWARD_DISTANCE = 217.4 * countPerInch; //TODO: Figure out what this is
+		static double FORWARD_DISTANCE = 200.4 * countPerInch; //TODO: Figure out what this is
+		static double DISTANCE_TO_LOWBAR = 60.0 * countPerInch;
 		static double ROTATION_DELTA = 60;
 		static double ADJUSTMENT_DISTANCE = 0.0; //TODO Figure out what this is
 	}
