@@ -50,6 +50,9 @@ import static org.usfirst.frc.team2635.robot.Constants.Autonomous.*;
  */
 public class Robot extends IterativeRobot 
 {
+	private static final double TILT_REZERO_TIMEOUT = 4.0;
+	private static final double RESET_LEVEL = 0.0;
+
 	//TODO: Make everything fit FunctionalityMode structure
 	enum FunctionalityMode
 	{
@@ -251,21 +254,23 @@ public class Robot extends IterativeRobot
 	public void flywheelConfigEncoder()
 	{
 		flywheelMode = FunctionalityMode.Encoder;
-		FIRE_SPEED = -67000.0; //Competition: -50000.0, Practice: 50000.0
-		FEED_SPEED = -FIRE_SPEED / 2.0;
+		FIRE_SPEED = -6300000.0; //Competition: -50000.0, Practice: 50000.0
+		SHOOTER_ERROR = 60000.0; //Meh
+		SmartDashboard.putNumber("Shooter error", SHOOTER_ERROR);
+		FEED_SPEED = 30000.0;
 
 		//On practice bot, leftFlywheelMotor has its sensor reversed. On competition, both are reversed.
 		rightFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.Speed);
     	rightFlywheelMotor.enableBrakeMode(true);
     	rightFlywheelMotor.reverseSensor(true);
-    	//rightFlywheelMotor.reverseOutput(true);
+    	rightFlywheelMotor.reverseOutput(true);
     	
     	leftFlywheelMotor.setPID(SHOOTER_P_DEFAULT, SHOOTER_I_DEFAULT, SHOOTER_D_DEFAULT);
     	leftFlywheelMotor.changeControlMode(TalonControlMode.Speed);
     	leftFlywheelMotor.enableBrakeMode(true);
     	leftFlywheelMotor.reverseSensor(true);
-    	//leftFlywheelMotor.reverseOutput(true);
+    	leftFlywheelMotor.reverseOutput(true);
 
 	}
 	public void elevatorConfigEncoder(boolean zero)
@@ -279,13 +284,15 @@ public class Robot extends IterativeRobot
 		
     	rightElevatorMotor.changeControlMode(TalonControlMode.Position);
     	rightElevatorMotor.reverseSensor(true);
-    	//rightElevatorMotor.reverseOutput(true);
+    	rightElevatorMotor.reverseOutput(true);
     	rightElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
     	
     	leftElevatorMotor.changeControlMode(TalonControlMode.Position);
     	leftElevatorMotor.reverseSensor(true);
-    	//leftElevatorMotor.reverseOutput(true);
+    	leftElevatorMotor.reverseOutput(true);
     	leftElevatorMotor.setPID(ELEVATOR_P_DEFAULT, ELEVATOR_I_DEFAULT, ELEVATOR_D_DEFAULT);
+    	elevatorPosition = 0;
+    	elevatorState = false;
     	if(zero)
     	{
 			rightElevatorMotor.setPosition(0.0);
@@ -299,6 +306,7 @@ public class Robot extends IterativeRobot
 		{
 			tiltEncoder.reset();
 		}
+		//tiltEncoder.setReverseDirection(true);
 		tiltPID.enable();
 	}
 	public void shooterAssemblyConfigEncoder(boolean rezeroEncoders)
@@ -444,7 +452,7 @@ public class Robot extends IterativeRobot
 	    smartDashboardInit();
     	driveInit(driveMode);	
 	    shooterInit(FunctionalityMode.Encoder);
-	    climberInit();
+	    //climberInit();
 	    cameraInit();
     }
     
@@ -589,7 +597,8 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousPeriodic() 
     {
-    		       	//A bit weird
+    	//A bit weird
+    	//Pick routines based upon the driverstation selection
     	switch((AutoMode.values()[(int)SmartDashboard.getNumber(AUTO_KEY)]))
     	{
 		case NO_AUTO:
@@ -691,22 +700,22 @@ public class Robot extends IterativeRobot
 		while(true)
 		{
 			
-			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON) || timer.hasPeriodPassed(2.0))
+			if(leftJoystick.getRawButton(REZERO_INTERRUPT_BUTTON) || timer.hasPeriodPassed(TILT_REZERO_TIMEOUT))
 			{
-				//tilt will be in vbus
 				tiltMotor.set(0.0);
 				tiltEncoder.reset();
 				tiltConfigEncoder(true);
-				tiltPID.setSetpoint(-100.0); //Competition = -100, Practice = 100
+				tiltPID.setSetpoint(RESET_LEVEL); //Competition = -100, Practice = 100
 				return false;
 			}
 			boolean limitHit = !tiltLimit.get();
+			SmartDashboard.putBoolean("Rezero Tilt Limit Hit", limitHit);
 			if(limitHit)
 			{
 				tiltMotor.set(0.0);
 				tiltEncoder.reset();
 				tiltConfigEncoder(true);
-				tiltPID.setSetpoint(100.0); //Competition = -100, Practice = 100
+				tiltPID.setSetpoint(RESET_LEVEL); //Competition = -100, Practice = 100
 				return true;
 			}
 		}
@@ -813,9 +822,9 @@ public class Robot extends IterativeRobot
 			
     			double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
     			double averageSpeed = (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2.0;
-    			boolean readyToFire = averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
+    			boolean readyToFire = averageSpeed >= SHOOTER_ERROR;//averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
 
-    			if(readyToFire || feedMotorSet)
+    			if(readyToFire || feedMotorSet || rightJoystick.getRawButton(VBUS_FEED_BUTTON))
     			{
     				feedMotor.set(1.0);
     				feedMotorSet = true;
@@ -1143,8 +1152,10 @@ public class Robot extends IterativeRobot
     		}
     		else if(rightJoystick.getRawButton(SPEED_MODE_BUTTON))
     		{
-    			
+     			rightElevatorMotor.clearIAccum();
+    			leftElevatorMotor.clearIAccum(); 			
     			shooterAssemblyConfigEncoder(true);
+
     			SmartDashboard.putString(DRIVE_MODE_KEY, DRIVE_MODE_SPEED);
     		}
     		
@@ -1173,7 +1184,7 @@ public class Robot extends IterativeRobot
     		SmartDashboard.putBoolean(TILT_FAULT_KEY, tiltFault);
     		boolean aimCamera = rightJoystick.getRawButton(AIM_CAMERA_BUTTON);
     		driveTeleop(driveMode, aimCamera);
-    		climberTeleop();
+    		//climberTeleop();
 
     }
     

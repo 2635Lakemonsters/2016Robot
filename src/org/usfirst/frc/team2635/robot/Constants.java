@@ -104,9 +104,8 @@ public final class Constants
 		static  String SHOOTER_KEY_I = "Shooter I";
 		static  String SHOOTER_KEY_D = "Shooter D";
 		
-		static double SHOOTER_P_DEFAULT = 0.3;
-		static double SHOOTER_I_DEFAULT = 0.00001
-				;
+		static double SHOOTER_P_DEFAULT = 0.5;
+		static double SHOOTER_I_DEFAULT = 0.0;
 		static double SHOOTER_D_DEFAULT = 0.0;
 	
 		static String SHOOTER_SPEED_KEY = "ShooterSpeed";
@@ -126,7 +125,7 @@ public final class Constants
 		static boolean shooterFault = false;
 		
 		static int RIGHT_FLYWHEEL_CHANNEL = 13;
-		static int LEFT_FLYWHEEL_CHANNEL = 7;
+		static int LEFT_FLYWHEEL_CHANNEL = 14;
 	
 		static int TILT_CHANNEL = 9;
 		static int TILT_ENCODER_A = 1;
@@ -157,14 +156,14 @@ public final class Constants
 		static boolean elevatorState = false;
 		static double debugTiltPosition = 0.0;
 		
-		static double TILT_MAX = 750.0; 
+		static double TILT_MAX = -750.0; 
 		static double TILT_RESTING = 0.0;
 		
 		static double ELEVATION_MAX = 45000.0; 
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR = 1200.0;
+		static double SHOOTER_ERROR;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
