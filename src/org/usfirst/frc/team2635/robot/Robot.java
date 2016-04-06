@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.Joystick.ButtonType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -120,6 +121,7 @@ public class Robot extends IterativeRobot
 		PIDController cameraXPID;
 		USBCamera cam0;
 		boolean cameraExists = false;
+		SensorOneShot drawSquareOneShot;
 		
 	//END CAMERA VARIABLES
 		
@@ -221,8 +223,8 @@ public class Robot extends IterativeRobot
 	{
 		flywheelMode = FunctionalityMode.VBus;
 		
-		FIRE_SPEED = 1.0;
-		FEED_SPEED = -FIRE_SPEED/ 2.5;
+		INSANE_FIRE_SPEED = 1.0;
+		FEED_SPEED = -INSANE_FIRE_SPEED/ 2.5;
 		
 	  	feedMotor.changeControlMode(TalonControlMode.PercentVbus);
     	rightFlywheelMotor.changeControlMode(TalonControlMode.PercentVbus);
@@ -254,9 +256,11 @@ public class Robot extends IterativeRobot
 	public void flywheelConfigEncoder()
 	{
 		flywheelMode = FunctionalityMode.Encoder;
-		FIRE_SPEED = -6300000.0; //Competition: -50000.0, Practice: 50000.0
-		SHOOTER_ERROR = 60000.0; //Meh
-		SmartDashboard.putNumber("Shooter error", SHOOTER_ERROR);
+		//Set fire speed to a very high setpoint so the motors will drive as hard as they can
+		INSANE_FIRE_SPEED = -6300000.0; //Competition: -50000.0, Practice: 50000.0
+		//
+		ACTUAL_FIRE_SPEED = 60000.0; 
+	
 		FEED_SPEED = 30000.0;
 
 		//On practice bot, leftFlywheelMotor has its sensor reversed. On competition, both are reversed.
@@ -368,7 +372,7 @@ public class Robot extends IterativeRobot
 	    		cam0.closeCamera();
 	      		int session = NIVision.IMAQdxOpenCamera("cam0",
 	                NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-	      		camera = new ImageGrabber(session, true, true, ImageMode.NORMAL, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE);
+	      		camera = new ImageGrabber(session, true, true, ImageMode.NORMAL, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, false);
 	//TODO: may need to add argument and logic to represent the camera view angle in the Y direction, if the camera's veiw angle isn't square. Edit the file in the LakeLib project, re export LakeLib to a jar (select built outputs and compression, write to LakeLib.jar) and restart eclipse if this ends up being true
 	      		angleToTargetGrabber = new SensorTargetAngleFromImage(CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, CAMERA_VIEW_ANGLE, TARGET_ASPECT_RATIO, TARGET_HUE_RANGE, TARGET_SATURATION_RANGE, TARGET_VALUE_RANGE, PARTICLE_AREA_MINIMUM);
 	      	
@@ -406,7 +410,7 @@ public class Robot extends IterativeRobot
       	angleUnwrapper = new SensorUnwrapper(180.0, new SensorNavxAngle(navx));
       	
   		cameraXPID = new PIDController(CAMERA_X_P_DEFAULT, CAMERA_X_I_DEFAULT, CAMERA_X_D_DEFAULT, angleUnwrapper, new PIDOutputThreeMotorRotate((DriveThreeMotor) robotDrive));
-
+  		drawSquareOneShot = new SensorOneShot(false);
 	}
 	public void smartDashboardInit()
 	{
@@ -501,7 +505,9 @@ public class Robot extends IterativeRobot
     public enum ShootAutoState
     {
     	DRIVE_FORWARD,
+    	DRIVE_CLOSER,
     	ANGLE_TO_TARGET,
+    	AIM_FIRE_AT_TARGET,
     	STOP_FIRE
     }
     public void simpleAuto()
@@ -520,12 +526,26 @@ public class Robot extends IterativeRobot
     	SmartDashboard.putString("Shoot auto state", shootAutoState.toString());
     	switch(shootAutoState)
     	{
-		case ANGLE_TO_TARGET:
-			if(Math.abs(cameraXPID.getError()) < 5.0)
+    	case AIM_FIRE_AT_TARGET:
+			calculateCameraSetpoints();
+			if(cameraSetpoints == null)
 			{
-				
-				//TODO pack the shooter subsystems into a class and the drive into a class so we don't have to do this gross function stuff.
-
+				shootAutoState = ShootAutoState.STOP_FIRE;
+			}
+			
+			tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 2.0, true);
+			driveTeleop(FunctionalityMode.Encoder, true);
+			
+			//Wait untill the drive and aim are both at target
+			if(Math.abs(tiltPID.getError()) < 10.0 && Math.abs(cameraXPID.getError()) < 5.0)
+			{
+				flywheelTeleop(FunctionalityMode.Encoder, true, false, true); //Fire when flywheels are up to speed
+			}
+			//Flywheel should keep shooting untill autonomous is over. At this point, joystick values will be gotten and the wheels will be switched off
+    		break;
+		case ANGLE_TO_TARGET:
+			
+			
 				elevateMethod.actuate(ELEVATION_MAX);
 				elevatorState = true;
 				elevatorPosition = ELEVATION_MAX;
@@ -534,34 +554,49 @@ public class Robot extends IterativeRobot
 				{
 					// Wait for elevator to clear chassis before attempting to tilt
 					tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 1.5, false);
+					//Wait until tilt is set to correct setpoint
+					if(Math.abs(tiltPID.getError()) < 10.0)
+					{
+						shootAutoState = ShootAutoState.AIM_FIRE_AT_TARGET;
+					}
 				}
-				calculateCameraSetpoints();
-				SmartDashboard.putString("State","Ahh");
 				//If unsucsessful at getting setpoints, give up.
-				if(cameraSetpoints == null)
-				{
-					shootAutoState = ShootAutoState.STOP_FIRE;
-				}
-				//Give about 2 seconds to aim
-				if(shootAutoTimer.hasPeriodPassed(2.0))
-				{
-					SmartDashboard.putString("State","Ahhhh");
-					flywheelTeleop(FunctionalityMode.Encoder, true, false);
-				}
-				//Thought this was done periodically, chances are its not for whatever reason. 
-				if(shootAutoTimer.hasPeriodPassed(0.5))
-				{
+//				//Give about 2 seconds to aim
+//				if(shootAutoTimer.hasPeriodPassed(2.0))
+//				{
+//					SmartDashboard.putString("State","Ahhhh");
+//					flywheelTeleop(FunctionalityMode.Encoder, true, false);
+//					
+//					//Prevent one aiming mode from colliding with another
+//					return;
+//				}
+				//Give the tilter a second to get moving
 					
-					SmartDashboard.putString("State","Ahhh");
-					//Aim
-					tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 2.0, true);
-					driveTeleop(FunctionalityMode.Encoder, true);
-				}
+//					SmartDashboard.putString("State","Ahhh");
+//					//Aim
+//					tiltTeleop(FunctionalityMode.Encoder, TILT_MAX / 2.0, true);
+//					driveTeleop(FunctionalityMode.Encoder, true);
+//					return;
 				
 				
-			}
+				
+			
 			
 			break;
+		case DRIVE_CLOSER:
+			if(Math.abs(cameraXPID.getError()) < 5.0)
+			{
+				cameraXPID.disable();
+				robotDrive.drive(0.3, -0.3);
+				double right = midRightMotor.getPosition();
+				double left = midLeftMotor.getPosition();
+
+				if(Math.abs(right) > ADJUSTMENT_DISTANCE|| Math.abs(left) > ADJUSTMENT_DISTANCE)
+				{
+					robotDrive.drive(0.0, 0.0);
+					shootAutoState = ShootAutoState.ANGLE_TO_TARGET;
+				}
+			}
 		case DRIVE_FORWARD:
 
 			double right = midRightMotor.getPosition();
@@ -573,9 +608,9 @@ public class Robot extends IterativeRobot
 				robotDrive.drive(0, 0);
 				cameraXPID.enable();
 				cameraXPID.setSetpoint(angleUnwrapper.sense(null) + ROTATION_DELTA);
-				shootAutoTimer.reset();
-				shootAutoTimer.start();
-				shootAutoState = ShootAutoState.ANGLE_TO_TARGET;
+//				shootAutoTimer.reset();
+//				shootAutoTimer.start();
+				shootAutoState = ShootAutoState.DRIVE_CLOSER;
 				return;
 			}
 	    	//Floor it once past lowbar
@@ -597,9 +632,8 @@ public class Robot extends IterativeRobot
     @Override
 	public void autonomousPeriodic() 
     {
-    	//A bit weird
-    	//Pick routines based upon the driverstation selection
-    	switch((AutoMode.values()[(int)SmartDashboard.getNumber(AUTO_KEY)]))
+    	//Pick routines based upon driver station selection
+    	switch((AutoMode.values()[(int)SmartDashboard.getNumber(AUTO_KEY, 0)]))
     	{
 		case NO_AUTO:
 			break;
@@ -623,9 +657,8 @@ public class Robot extends IterativeRobot
     @Override
     public void teleopInit()
     {
-    	rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
-    	leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P), SmartDashboard.getNumber(SHOOTER_KEY_I), SmartDashboard.getNumber(SHOOTER_KEY_D));
-
+//    	rightFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P, SHOOTER_P_DEFAULT), SmartDashboard.getNumber(SHOOTER_KEY_I, SHOOTER_I_DEFAULT), SmartDashboard.getNumber(SHOOTER_KEY_D, SHOOTER_D_DEFAULT));
+//     	leftFlywheelMotor.setPID(SmartDashboard.getNumber(SHOOTER_KEY_P, SHOOTER_P_DEFAULT), SmartDashboard.getNumber(SHOOTER_KEY_I, SHOOTER_I_DEFAULT), SmartDashboard.getNumber(SHOOTER_KEY_D, SHOOTER_D_DEFAULT));
 	    
     }
     /**
@@ -637,7 +670,7 @@ public class Robot extends IterativeRobot
     {
     	if(teleopMode == FunctionalityMode.Encoder)
     	{
-	    	boolean findTargetAngle = rightJoystick.getRawButton(AIM_BUTTON);
+	    	boolean findTargetAngle = rightJoystick.getRawButton(ELEVATE_MAX_BUTTON);
 	    	//TODO: Tilt angle is currently set to just always be manually set
 	    	//Transform [-1,1] to [0,1]
 	    	double tiltAngle = ((-rightJoystick.getRawAxis(TILT_AXIS) + 1) / 2)  * TILT_MAX ;
@@ -801,30 +834,27 @@ public class Robot extends IterativeRobot
 		}
     }
     boolean feedMotorSet = false;
-    public void flywheelTeleop(FunctionalityMode mode, boolean fire, boolean loadFront)
+    public void flywheelTeleop(FunctionalityMode mode, boolean fire, boolean loadFront, boolean autoFire)
     {
 //    	boolean fire = rightJoystick.getRawButton(FIRE_BUTTON);
 //		boolean loadFront = rightJoystick.getRawButton(LOAD_FRONT_BUTTON);
 		
-    	if(fire)
+    	//Start firing when the fire button is pressed or the robot is aiming
+    	if(fire || (rightJoystick.getRawButton(AIM_CAMERA_BUTTON) && cameraSetpoints != null))
     	{
 			rightFlywheelMotor.enable();
-			
-			
 			leftFlywheelMotor.enable();
 
-    		flywheelMethod.actuate(FIRE_SPEED);
+    		flywheelMethod.actuate(INSANE_FIRE_SPEED);
     		if(mode == FunctionalityMode.Encoder)
     		{
-    		
     			checkFlywheelFault();
-			
-			
-    			double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
-    			double averageSpeed = (Math.abs(rightFlywheelMotor.getSpeed()) + Math.abs(leftFlywheelMotor.getSpeed())) / 2.0;
-    			boolean readyToFire = averageSpeed >= SHOOTER_ERROR;//averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
+    			//double averageError = (Math.abs(rightFlywheelMotor.getError()) + Math.abs(leftFlywheelMotor.getError())) / 2.0;
+    			boolean upToSpeed = Math.abs(rightFlywheelMotor.getSpeed()) > ACTUAL_FIRE_SPEED || Math.abs(leftFlywheelMotor.getSpeed()) > ACTUAL_FIRE_SPEED;
+    			boolean readyToAutoFire = upToSpeed && autoFire;//averageError < SHOOTER_ERROR && averageSpeed > Math.abs(FIRE_SPEED) - SHOOTER_ERROR;
 
-    			if(readyToFire || feedMotorSet || rightJoystick.getRawButton(VBUS_FEED_BUTTON))
+    			//Feed when the motors are up to speed, the feed motor has already started running, or the feed button is pressed
+    			if(readyToAutoFire || feedMotorSet || leftJoystick.getRawButton(FEED_BUTTON))
     			{
     				feedMotor.set(1.0);
     				feedMotorSet = true;
@@ -836,7 +866,7 @@ public class Robot extends IterativeRobot
     		}
     		else if(mode == FunctionalityMode.VBus)
     		{
-    			if(rightJoystick.getRawButton(VBUS_FEED_BUTTON))
+    			if(leftJoystick.getRawButton(FEED_BUTTON))
     			{
     				feedMotor.set(1.0);
     			}
@@ -855,8 +885,6 @@ public class Robot extends IterativeRobot
     		}
     		
     		rightFlywheelMotor.enable();
-    		
-    		
     		leftFlywheelMotor.enable();
     		
     		flywheelMethod.actuate(FEED_SPEED);
@@ -868,10 +896,9 @@ public class Robot extends IterativeRobot
     		leftFlywheelMotor.ClearIaccum();
     		
     		feedMotorSet = false;
+    		
     		//Prevent oscillating around 0
-    		
     		rightFlywheelMotor.disable();
-    		
    			leftFlywheelMotor.disable();
     		
     		flywheelMethod.actuate(0.0);
@@ -891,14 +918,14 @@ public class Robot extends IterativeRobot
     	}
     	
     	
-    	boolean climbing = leftJoystick.getRawButton(CLIMB_UP_BUTTON) || leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
+    	//boolean climbing = leftJoystick.getRawButton(CLIMB_UP_BUTTON) || leftJoystick.getRawButton(CLIMB_DOWN_BUTTON);
     	
     	if(mode == FunctionalityMode.Encoder)
     	{
 			if(elevatorPosition > 0)
 			{
 				//If the left or right elevator isn't returning the correct distance
-				if(!(rightElevatorMotor.getPosition() > 0.5)|| !(leftElevatorMotor.getPosition() > 0.5))
+				if(!(rightElevatorMotor.getPosition() > 0.0)|| !(leftElevatorMotor.getPosition() > 0.0))
 				{
 					elevatorFault = true;
 				}
@@ -907,24 +934,33 @@ public class Robot extends IterativeRobot
 					elevatorFault = false;
 				}
 			}
+			
+			//To avoid ambiguity, after bringing the elevator to a specific position, the next button press will  always bring the elevator to max.
 			if(elevateUp && elevatorPosition < ELEVATION_MAX)
 			{
 				elevatorPosition += ELEVATE_UP_SPEED;
+				elevatorState = false;
 			}
 			else if(elevateDown && elevatorPosition > 0)
 			{
 				elevatorPosition += ELEVATE_DOWN_SPEED;
+				elevatorState = false;
 			}
-			else if(start || climbing)
+			else if(start)
 			{
 				elevatorPosition = ELEVATION_START;
+				elevatorState = false;
 			}
+			
 			if(aim)
 			{
+				//If elevator state is true, the next button press will bring it to false, bringing the elevator down.
+				//If elevator state is false, the next button press will bring it to true, bringing the elevator up.
 				if(elevatorState == true)
 				{
 					elevatorPosition = 0;
 					elevatorState = false;
+					//This will block execution and inevitably bring the elevator to position 0, so elevatorPosition will indeed be 0 at the end.
 					rezeroTiltAndElevator();
 				}
 				else
@@ -952,7 +988,7 @@ public class Robot extends IterativeRobot
 	    	}
     	}
     }
-    boolean aimed = false;
+    boolean calculatedSetpoint = false;
     double angleToTargetYSetpoint;
     public void tiltTeleop(FunctionalityMode mode, double tiltAngle, boolean aimCamera)
     {
@@ -962,16 +998,17 @@ public class Robot extends IterativeRobot
     	if(tiltLimitHit)
     	{
     		tiltEncoder.reset();
+    		tiltPID.disable();
     	}
     	if(mode == FunctionalityMode.Encoder)
     	{
     		//TODO: Camera aiming
     	 	if(aimCamera && cameraSetpoints != null)
     	 	{
-    	 		if(!aimed)
+    	 		if(!calculatedSetpoint)
     	 		{
 	    	 		angleToTargetYSetpoint = tiltEncoder.getDistance() + (cameraSetpoints.y - TILT_PIXEL_SETPOINT) * PIXEL_TO_TILT;     	 		
-	    	 		aimed = true;
+	    	 		calculatedSetpoint = true;
     	 		}
     	 		else
     	 		{
@@ -980,9 +1017,10 @@ public class Robot extends IterativeRobot
     	 	}
     	 	else
     	 	{
-    	 		aimed = false;
+    	 		calculatedSetpoint = false;
 	    	 	if(Math.abs(rightElevatorMotor.getPosition()) > ELEVATION_ABOVE_CHASSIS || Math.abs(leftElevatorMotor.getPosition()) > ELEVATION_ABOVE_CHASSIS)
 	    	 	{
+	    	 		tiltPID.enable();
 	    	 		tiltPID.setSetpoint(tiltAngle);
 	    	 	}
 	    	 	else
@@ -1024,10 +1062,10 @@ public class Robot extends IterativeRobot
 	 	
     	boolean elevateUp = rightJoystick.getRawButton(ELEVATE_UP_BUTTON);
     	boolean elevateDown = rightJoystick.getRawButton(ELEVATE_DOWN_BUTTON);
-    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(AIM_BUTTON));
+    	boolean aim = (boolean) elevateOneShot.sense(rightJoystick.getRawButton(ELEVATE_MAX_BUTTON));
     	boolean start = leftJoystick.getRawButton(STARTING_BUTTON);
     	SmartDashboard.putBoolean("Fire button", fire);
-    	flywheelTeleop(flywheelMode, fire, loadFront);
+    	flywheelTeleop(flywheelMode, fire, loadFront, false); //Let user choose when to fire, so autoFire is false
     	elevatorTeleop(elevatorMode, elevateUp, elevateDown, aim, start);
     	tiltTeleop(tiltMode, tiltAngle, aimCamera);
 		
@@ -1047,6 +1085,7 @@ public class Robot extends IterativeRobot
 				cameraXPID.enable();
 				cameraXPID.setSetpoint(setPoint);
     		}
+    		return;
     	}
     	else
     	{
@@ -1054,9 +1093,10 @@ public class Robot extends IterativeRobot
     		{
     			cameraXPID.disable();
     		}
+    	 	robotDrive.drive(LY, RY);
     	}
     
-    	robotDrive.drive(LY, RY);
+   
     }
     public void climberTeleop()
     {	
@@ -1116,9 +1156,15 @@ public class Robot extends IterativeRobot
     	//END DEBUG
 	    	
 	    	//Prevent lag issues (multithreading?)
-	    	if(SmartDashboard.getBoolean("Push") )
+	    	if((Boolean)drawSquareOneShot.sense(rightJoystick.getRawButton(DRAW_SQUARE_BUTTON)))
 	    	{
-		    	boolean currentCameraMode = SmartDashboard.getBoolean(CAMERA_MODE_KEY);
+	    		boolean newDrawTargetState = !camera.getDrawTarget();
+	    		SmartDashboard.putBoolean(DRAW_BOX_KEY, newDrawTargetState);
+	    		camera.setDrawTarget(newDrawTargetState);
+	    	}
+	    	if(SmartDashboard.getBoolean("Push", false) )
+	    	{
+		    	boolean currentCameraMode = SmartDashboard.getBoolean(CAMERA_MODE_KEY, false);
 		    	
 	    		if(currentCameraMode)
 	    		{
@@ -1129,12 +1175,12 @@ public class Robot extends IterativeRobot
 	    			camera.setMode(ImageMode.NORMAL);
 	    		}
 	    	
-		    	TARGET_HUE_RANGE.maxValue =(int) SmartDashboard.getNumber(HUE_MAX_KEY);
-		    	TARGET_HUE_RANGE.minValue = (int) SmartDashboard.getNumber(HUE_MIN_KEY);
-		    	TARGET_SATURATION_RANGE.maxValue = (int) SmartDashboard.getNumber(SAT_MAX_KEY);
-		    	TARGET_SATURATION_RANGE.minValue = (int) SmartDashboard.getNumber(SAT_MIN_KEY);
-		    	TARGET_VALUE_RANGE.maxValue = (int) SmartDashboard.getNumber(VAL_MAX_KEY);
-		    	TARGET_VALUE_RANGE.minValue = (int) SmartDashboard.getNumber(VAL_MIN_KEY);
+		    	TARGET_HUE_RANGE.maxValue =(int) SmartDashboard.getNumber(HUE_MAX_KEY, TARGET_HUE_RANGE.maxValue);
+		    	TARGET_HUE_RANGE.minValue = (int) SmartDashboard.getNumber(HUE_MIN_KEY, TARGET_HUE_RANGE.minValue);
+		    	TARGET_SATURATION_RANGE.maxValue = (int) SmartDashboard.getNumber(SAT_MAX_KEY, TARGET_SATURATION_RANGE.maxValue);
+		    	TARGET_SATURATION_RANGE.minValue = (int) SmartDashboard.getNumber(SAT_MIN_KEY, TARGET_SATURATION_RANGE.minValue);
+		    	TARGET_VALUE_RANGE.maxValue = (int) SmartDashboard.getNumber(VAL_MAX_KEY, TARGET_VALUE_RANGE.maxValue);
+		    	TARGET_VALUE_RANGE.minValue = (int) SmartDashboard.getNumber(VAL_MIN_KEY, TARGET_VALUE_RANGE.minValue);
 		    		
 		    	camera.setHueRange(TARGET_HUE_RANGE);
 		    	camera.setSatRange(TARGET_SATURATION_RANGE);

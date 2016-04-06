@@ -62,11 +62,12 @@ public class ImageGrabber
 	int session;
 	boolean outputToDashboard;
 	boolean flip;
+	boolean drawTarget;
 	CameraServer server;
 	Timer cameraTimer;
 
 	public ImageGrabber(int session, long grabRate, boolean outputToDashboard, boolean flip, ImageMode startingMode,
-			NIVision.Range HUE_RANGE, NIVision.Range SAT_RANGE, NIVision.Range VAL_RANGE)
+			NIVision.Range HUE_RANGE, NIVision.Range SAT_RANGE, NIVision.Range VAL_RANGE, boolean drawTarget)
 	{
 		criteria[0] = new NIVision.ParticleFilterCriteria2(NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA, 0.3, 1.0,
 				0, 0);
@@ -85,12 +86,13 @@ public class ImageGrabber
 		this.HUE_RANGE = HUE_RANGE;
 		this.SAT_RANGE = SAT_RANGE;
 		this.VAL_RANGE = VAL_RANGE;
+		this.drawTarget = drawTarget;
 	}
 
 	public ImageGrabber(int session, boolean outputToDashboard, boolean flip, ImageMode startingMode,
-			NIVision.Range HUE_RANGE, NIVision.Range SAT_RANGE, NIVision.Range VAL_RANGE)
+			NIVision.Range HUE_RANGE, NIVision.Range SAT_RANGE, NIVision.Range VAL_RANGE, boolean drawTarget)
 	{
-		this(session, 50L, outputToDashboard, flip, startingMode, HUE_RANGE, SAT_RANGE, VAL_RANGE);
+		this(session, 50L, outputToDashboard, flip, startingMode, HUE_RANGE, SAT_RANGE, VAL_RANGE, drawTarget);
 	}
 
 	public class CameraTask extends TimerTask
@@ -134,7 +136,14 @@ public class ImageGrabber
 	{
 		this.VAL_RANGE = valRange;
 	}
-
+	public synchronized void setDrawTarget(boolean drawTarget)
+	{
+		this.drawTarget = drawTarget;
+	}
+	public synchronized boolean getDrawTarget()
+	{
+		return drawTarget;
+	}
 	public void runCamera()
 	{
 		synchronized (this)
@@ -164,51 +173,53 @@ public class ImageGrabber
 				// NIVision.imaqColorThreshold(bwImage, image, 255,
 				// ColorMode.HSV, HUE_RANGE, SAT_RANGE, VAL_RANGE);
 				// Filter out particles that are too small
-				NIVision.imaqParticleFilter4(bwImage, bwImage, criteria, filterOptions, null);
-
-				int numParticles = NIVision.imaqCountParticles(bwImage, 1);
-				if (numParticles > 0)
+				if(drawTarget)
 				{
-					ParticleReport bestParticle = null;
-					// Vector<ParticleReport> particles = new
-					// Vector<ParticleReport>();
-					for (int particleIndex = 0; particleIndex < numParticles; particleIndex++)
+					NIVision.imaqParticleFilter4(bwImage, bwImage, criteria, filterOptions, null);
+	
+					int numParticles = NIVision.imaqCountParticles(bwImage, 1);
+					if (numParticles > 0)
 					{
-						ParticleReport par = new ParticleReport();
-						par.Area = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_AREA);
-						par.AreaByImageArea = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA);
-						par.BoundingRectTop = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_BOUNDING_RECT_TOP);
-						par.BoundingRectLeft = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_BOUNDING_RECT_LEFT);
-						par.BoundingRectHeight = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_BOUNDING_RECT_HEIGHT);
-						par.BoundingRectWidth = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
-								NIVision.MeasurementType.MT_BOUNDING_RECT_WIDTH);
-						if (bestParticle == null
-								|| Math.abs(par.BoundingRectHeight / par.BoundingRectWidth - ASPECT_RATIO) < Math.abs(
-										bestParticle.BoundingRectHeight / bestParticle.BoundingRectWidth) - ASPECT_RATIO 
-								&& par.BoundingRectTop <= Constants.Camera.CAMERA_RESOLUTION_Y * 0.70 // The ball covers the lower fourth of the image, so ignore any particles there.
-								)
+						ParticleReport bestParticle = null;
+						// Vector<ParticleReport> particles = new
+						// Vector<ParticleReport>();
+						for (int particleIndex = 0; particleIndex < numParticles; particleIndex++)
 						{
-							bestParticle = par;
+							ParticleReport par = new ParticleReport();
+							par.Area = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_AREA);
+							par.AreaByImageArea = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA);
+							par.BoundingRectTop = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_BOUNDING_RECT_TOP);
+							par.BoundingRectLeft = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_BOUNDING_RECT_LEFT);
+							par.BoundingRectHeight = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_BOUNDING_RECT_HEIGHT);
+							par.BoundingRectWidth = NIVision.imaqMeasureParticle(bwImage, particleIndex, 0,
+									NIVision.MeasurementType.MT_BOUNDING_RECT_WIDTH);
+							if (bestParticle == null
+									|| Math.abs(par.BoundingRectHeight / par.BoundingRectWidth - ASPECT_RATIO) < Math.abs(
+											bestParticle.BoundingRectHeight / bestParticle.BoundingRectWidth) - ASPECT_RATIO 
+									&& par.BoundingRectTop <= Constants.Camera.CAMERA_RESOLUTION_Y * 0.70 // The ball covers the lower fourth of the image, so ignore any particles there.
+									)
+							{
+								bestParticle = par;
+							}
+							// particles.add(par);
+	
 						}
-						// particles.add(par);
-
+						// particles.sort(null);
+						NIVision.imaqDrawShapeOnImage(image, image,
+								new NIVision.Rect((int) bestParticle.BoundingRectTop, (int) bestParticle.BoundingRectLeft,
+										(int) bestParticle.BoundingRectHeight, (int) bestParticle.BoundingRectWidth),
+								DrawMode.DRAW_VALUE, ShapeMode.SHAPE_RECT, 0);
+	
+					} else
+					{
+	
 					}
-					// particles.sort(null);
-					NIVision.imaqDrawShapeOnImage(image, image,
-							new NIVision.Rect((int) bestParticle.BoundingRectTop, (int) bestParticle.BoundingRectLeft,
-									(int) bestParticle.BoundingRectHeight, (int) bestParticle.BoundingRectWidth),
-							DrawMode.DRAW_VALUE, ShapeMode.SHAPE_RECT, 0);
-
-				} else
-				{
-
 				}
-
 				server.setImage(image);
 
 			} catch (Exception ex)

@@ -57,8 +57,10 @@ public final class Constants
 		static String SAT_MIN_KEY = "SatMin";
 		static String SAT_MAX_KEY = "SatMax";
 		
-	    static  double CAMERA_X_P_DEFAULT = 0.01;
-	    static  double CAMERA_X_I_DEFAULT = 0.0006;
+		static String DRAW_BOX_KEY = "DrawBox";
+		
+	    static  double CAMERA_X_P_DEFAULT = 0.015;
+	    static  double CAMERA_X_I_DEFAULT = 0.001;
 	    static  double CAMERA_X_D_DEFAULT = 0.0;
 
 		static  double CAMERA_Y_P_DEFAULT = 0.015;
@@ -78,6 +80,8 @@ public final class Constants
 		
 		static int TILT_PIXEL_SETPOINT = 250;
 		static double PIXEL_TO_TILT = 1.149;
+		
+		static int DRAW_SQUARE_BUTTON = 4;
 		
 	}
 	public static class Shooter
@@ -143,7 +147,7 @@ public final class Constants
 		
 		static int FEED_CHANNEL = 11;
 		
-		static double FIRE_SPEED; //= 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
+		static double INSANE_FIRE_SPEED; //= 1.0; //TODO: If speed mode implemented, multiply this by speed scaler
 		static double FEED_SPEED; //0.5;
 		
 		static double LOAD_FRONT_SPEED = -0.5; //TODO: If speed mode implemented, multiply this by speed scaler
@@ -163,11 +167,11 @@ public final class Constants
 		static double ELEVATION_ABOVE_CHASSIS = ELEVATION_MAX / 2; 
 		static double ELEVATION_START = 34000;
 		static double ELEVATION_ERROR = 1000.0;
-		static double SHOOTER_ERROR;
+		static double ACTUAL_FIRE_SPEED;
 		static double TILT_ERROR = 10.0;
 		//Right hand joystick
 		static  int TILT_AXIS = 2;
-		static  int AIM_BUTTON = 3;
+		static  int ELEVATE_MAX_BUTTON = 3;
 		static  int FIRE_BUTTON = 1;
 		static  int LOAD_FRONT_BUTTON = 2;
 		static int AIM_CAMERA_BUTTON = 5;
@@ -176,7 +180,10 @@ public final class Constants
 		static  int ELEVATE_DOWN_BUTTON = 10;
 		static int STARTING_BUTTON = 6;
 		
-		static int VBUS_FEED_BUTTON = 4;
+		/**
+		 * Left joystick
+		 */
+		static int FEED_BUTTON = 1;
 	}
 	public static class Climber
 	{
@@ -224,9 +231,9 @@ public final class Constants
 		}
 		static String AUTO_KEY ="AutoMode";
 		public static double countPerInch = 216.67;
-		static double FORWARD_DISTANCE = 200.4 * countPerInch; //TODO: Figure out what this is
+		static double FORWARD_DISTANCE = 200.4 * countPerInch; 
 		static double DISTANCE_TO_LOWBAR = 60.0 * countPerInch;
 		static double ROTATION_DELTA = 60;
-		static double ADJUSTMENT_DISTANCE = 0.0; //TODO Figure out what this is
+		static double ADJUSTMENT_DISTANCE = 24.0 * countPerInch; //TODO Figure out what this is
 	}
 }
