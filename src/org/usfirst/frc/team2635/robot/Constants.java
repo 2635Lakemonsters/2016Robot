@@ -72,13 +72,15 @@ public final class Constants
 		static  double CAMERA_VIEW_ANGLE = 64.0;
 		static  double TARGET_ASPECT_RATIO = 14.0/20.0;
 		static  NIVision.Range TARGET_HUE_RANGE = new NIVision.Range(0, 130);
-		static  NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(0, 255);
-		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(250, 255);
+		static  NIVision.Range TARGET_SATURATION_RANGE = new NIVision.Range(200, 255);
+		static  NIVision.Range TARGET_VALUE_RANGE = new NIVision.Range(200, 255);
 		
 		static  double PARTICLE_AREA_MINIMUM = 0.3;
 		static NIVision.PointDouble cameraSetpoints;
+		static int TILT_PIXEL_SETPOINT_MID = 275;
+		static int TILT_PIXEL_SETPOINT_LEFT = 275;
 		
-		static int TILT_PIXEL_SETPOINT = 250;
+		static int TILT_PIXEL_SETPOINT = TILT_PIXEL_SETPOINT_MID;
 		static double PIXEL_TO_TILT = 1.149;
 		
 		static int DRAW_SQUARE_BUTTON = 4;
@@ -221,7 +223,8 @@ public final class Constants
 		{
 			NO_AUTO(0),
 			SIMPLE_AUTO(1),
-			SHOOT_AUTO(2);
+			SHOOT_AUTO(2),
+			SPYBOX_AUTO(3);
 			
 			public int value;
 			AutoMode(int number)
@@ -233,7 +236,7 @@ public final class Constants
 		public static double countPerInch = 216.67;
 		static double FORWARD_DISTANCE = 200.4 * countPerInch; 
 		static double DISTANCE_TO_LOWBAR = 60.0 * countPerInch;
-		static double ROTATION_DELTA = 60;
-		static double ADJUSTMENT_DISTANCE = 24.0 * countPerInch; //TODO Figure out what this is
+		static double ROTATION_DELTA = 60.0;
+		static double ADJUSTMENT_DISTANCE = 12.0 * countPerInch; //TODO Figure out what this is
 	}
 }

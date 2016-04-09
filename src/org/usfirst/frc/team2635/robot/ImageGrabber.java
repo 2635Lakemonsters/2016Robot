@@ -16,10 +16,11 @@ import com.ni.vision.NIVision.ShapeMode;
 
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.vision.USBCamera;
 
 public class ImageGrabber
 {
-	private static final double ASPECT_RATIO = 14.0 / 20.0;
+	private static final double ASPECT_RATIO = 12.0 / 20.0;
 
 	public enum ImageMode
 	{
@@ -59,25 +60,25 @@ public class ImageGrabber
 
 	NIVision.Image image;
 	NIVision.Image bwImage;
-	int session;
 	boolean outputToDashboard;
 	boolean flip;
 	boolean drawTarget;
 	CameraServer server;
 	Timer cameraTimer;
-
+	USBCamera camera;
+	int session;
 	public ImageGrabber(int session, long grabRate, boolean outputToDashboard, boolean flip, ImageMode startingMode,
 			NIVision.Range HUE_RANGE, NIVision.Range SAT_RANGE, NIVision.Range VAL_RANGE, boolean drawTarget)
 	{
-		criteria[0] = new NIVision.ParticleFilterCriteria2(NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA, 0.3, 1.0,
+		criteria[0] = new NIVision.ParticleFilterCriteria2(NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA, 0.3, 100,
 				0, 0);
 
 		image = NIVision.imaqCreateImage(ImageType.IMAGE_RGB, 0);
 		bwImage = NIVision.imaqCreateImage(ImageType.IMAGE_U8, 0);
 		mode = startingMode;
-		this.session = session;
 		this.outputToDashboard = outputToDashboard;
 		this.flip = flip;
+		this.session = session;
 		server = CameraServer.getInstance();
 		NIVision.IMAQdxConfigureGrab(session);
 		NIVision.IMAQdxStartAcquisition(session);
@@ -151,7 +152,7 @@ public class ImageGrabber
 			try
 			{
 				NIVision.IMAQdxGrab(session, image, 1);
-			
+				//camera.getImage(image);
 				//NIVision.imaqSetImageSize(image, NIVision.imaqGetImageSize(image).width,NIVision.imaqGetImageSize(image).height - NIVision.imaqGetImageSize(image).height/4);
 				if(flip)
 				{
@@ -201,7 +202,7 @@ public class ImageGrabber
 							if (bestParticle == null
 									|| Math.abs(par.BoundingRectHeight / par.BoundingRectWidth - ASPECT_RATIO) < Math.abs(
 											bestParticle.BoundingRectHeight / bestParticle.BoundingRectWidth) - ASPECT_RATIO 
-									&& par.BoundingRectTop <= Constants.Camera.CAMERA_RESOLUTION_Y * 0.70 // The ball covers the lower fourth of the image, so ignore any particles there.
+									//&& par.BoundingRectTop <= Constants.Camera.CAMERA_RESOLUTION_Y * 0.70 // The ball covers the lower fourth of the image, so ignore any particles there.
 									)
 							{
 								bestParticle = par;
